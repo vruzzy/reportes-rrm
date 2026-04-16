@@ -11,7 +11,7 @@ const OPT = {
   ],
   actitudConducta: [
     'Tranquilo/a', 'Colaborador/a', 'Comunicativo/a', 'Ansioso/a',
-    'Agitado/a', 'Desorientado/a', 'Llanto fácil', 'Resistente a cuidados',
+    'Agitado/a', 'Desorientado/a', 'Llanto fácil', 'Resistente a cuidados', 'Renuente',
   ],
   cuidadosRealizados: [
     'Baño completo', 'Baño parcial', 'Cambio de pañal',
