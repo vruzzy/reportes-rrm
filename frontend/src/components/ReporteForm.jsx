@@ -354,6 +354,17 @@ export default function ReporteForm() {
         </div>
       </SectionCard>
 
+      {/* ── SUEÑO (solo nocturno) ── */}
+      {turno === 'Nocturno' && (
+        <SectionCard title="¿Cómo durmió?">
+          <ChipMulti
+            options={OPT.sueño}
+            selected={form.sueño}
+            onSelect={setField('sueño')}
+          />
+        </SectionCard>
+      )}
+
       {/* ── ESTADO AL RECIBIR ── */}
       <SectionCard title="Estado al recibir">
         <ChipSingle
@@ -443,17 +454,6 @@ export default function ReporteForm() {
             options={OPT.actividadesDia}
             selected={form.actividadesDia}
             onSelect={setField('actividadesDia')}
-          />
-        </SectionCard>
-      )}
-
-      {/* ── SUEÑO (solo nocturno) ── */}
-      {turno === 'Nocturno' && (
-        <SectionCard title="¿Cómo durmió?">
-          <ChipMulti
-            options={OPT.sueño}
-            selected={form.sueño}
-            onSelect={setField('sueño')}
           />
         </SectionCard>
       )}
