@@ -44,6 +44,7 @@ REGLAS:
 - Lenguaje sencillo y cercano, sin tecnicismos innecesarios, pero siempre respetuoso
 - Tono cálido, como si le hablaras directamente a la familia
 - NO menciones signos vitales en ningún momento, ni T/A, FC, SpO₂, FR ni temperatura
+- NO agregues frases de cierre, despedidas, ni frases motivacionales al final
 - Máximo 250 palabras
 
 DATOS DEL TURNO:
