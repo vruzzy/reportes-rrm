@@ -34,9 +34,17 @@ const OPT = {
   ],
   observacionesEspeciales: [
     'Sin novedades', 'Caída o incidente', 'Visita familiar',
-    'Salida médica', 'Cambio en estado general',
+    'Salida médica', 'Salió de la residencia', 'Cambio en estado general',
     'Revisión médica en turno', 'Comunicación con familia',
     'Traslado hospitalario',
+  ],
+  sueño: [
+    'Durmió bien toda la noche',
+    'Sueño intermitente',
+    'Se levantó varias veces',
+    'No logró conciliar el sueño',
+    'Requirió asistencia para acostarse',
+    'Se mantuvo en vigilancia',
   ],
 }
 
@@ -126,7 +134,8 @@ function emptyForm() {
     cambiosPañal:          0,
     alimentacion:          '',
     medicamentos:          '',
-    actividadesDia:        '',
+    actividadesDia:        [],
+    sueño:                 [],
     observacionesEspeciales: [],
     signosVitales: {
       ta_sistolica:  '',
@@ -226,7 +235,8 @@ export default function ReporteForm() {
           cambiosPañal:            form.cambiosPañal,
           alimentacion:            form.alimentacion,
           medicamentos:            form.medicamentos,
-          actividadesDia:          turno !== 'Nocturno' ? form.actividadesDia : '',
+          actividadesDia:          turno !== 'Nocturno' ? form.actividadesDia : [],
+          sueño:                   turno === 'Nocturno' ? form.sueño : [],
           observacionesEspeciales: form.observacionesEspeciales,
           signosVitales:           form.signosVitales,
           enfermero:               form.enfermero,
@@ -429,10 +439,21 @@ export default function ReporteForm() {
       {/* ── ACTIVIDADES (solo matutino-vespertino) ── */}
       {turno !== 'Nocturno' && (
         <SectionCard title="Actividades del día">
-          <ChipSingle
+          <ChipMulti
             options={OPT.actividadesDia}
             selected={form.actividadesDia}
             onSelect={setField('actividadesDia')}
+          />
+        </SectionCard>
+      )}
+
+      {/* ── SUEÑO (solo nocturno) ── */}
+      {turno === 'Nocturno' && (
+        <SectionCard title="¿Cómo durmió?">
+          <ChipMulti
+            options={OPT.sueño}
+            selected={form.sueño}
+            onSelect={setField('sueño')}
           />
         </SectionCard>
       )}

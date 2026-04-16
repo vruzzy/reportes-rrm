@@ -27,6 +27,7 @@ router.post('/generar-reporte', async (req, res) => {
     enfermero,
     horaReporte,
     notasAdicionales,
+    sueño,
   } = req.body;
 
   const cuidadosTexto = Array.isArray(cuidadosRealizados)
@@ -36,6 +37,14 @@ router.post('/generar-reporte', async (req, res) => {
           : c
       ).join(', ')
     : cuidadosRealizados;
+
+  const actividadesTexto = Array.isArray(actividadesDia)
+    ? actividadesDia.filter(a => a !== 'N/A').join(', ')
+    : actividadesDia;
+
+  const sueñoTexto = Array.isArray(sueño) && sueño.length
+    ? sueño.join(', ')
+    : '';
 
   const prompt = `Redacta el cuerpo narrativo del reporte de turno de la Residencia Refugio Mendoza para la familia del residente.
 
@@ -54,7 +63,8 @@ Actitud y conducta: ${Array.isArray(actitudConducta) && actitudConducta.length ?
 Cuidados realizados: ${cuidadosTexto || 'Sin datos'}
 Alimentación: ${alimentacion || 'Sin datos'}
 Medicamentos: ${medicamentos || 'Sin datos'}
-${turno !== 'Nocturno' && actividadesDia && actividadesDia !== 'N/A' ? `Actividades del día: ${actividadesDia}` : ''}
+${turno !== 'Nocturno' && actividadesTexto ? `Actividades del día: ${actividadesTexto}` : ''}
+${turno === 'Nocturno' && sueñoTexto ? `Sueño: ${sueñoTexto}` : ''}
 Observaciones: ${Array.isArray(observacionesEspeciales) && observacionesEspeciales.length ? observacionesEspeciales.join(', ') : 'Sin novedades'}
 ${notasAdicionales?.trim() ? `Notas adicionales: ${notasAdicionales.trim()}` : ''}`;
 
