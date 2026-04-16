@@ -37,41 +37,26 @@ router.post('/generar-reporte', async (req, res) => {
       ).join(', ')
     : cuidadosRealizados;
 
-  const prompt = `Eres enfermero/a de la Residencia Refugio Mendoza, Mérida, Yucatán. Escribe el reporte del turno para la familia del residente de forma clara y cercana, como si les estuvieras contando cómo estuvo su familiar durante el turno.
+  const prompt = `Redacta el cuerpo narrativo del reporte de turno de la Residencia Refugio Mendoza para la familia del residente.
 
-REGLAS:
-- Texto corrido y natural, sin asteriscos, guiones, emojis, tablas ni símbolos
-- Lenguaje sencillo y cercano, sin tecnicismos innecesarios, pero siempre respetuoso
-- Tono cálido, como si le hablaras directamente a la familia
-- NO menciones signos vitales en ningún momento, ni T/A, FC, SpO₂, FR ni temperatura
-- NO agregues frases de cierre, despedidas, ni frases motivacionales al final
-- Máximo 250 palabras
+REGLAS ESTRICTAS:
+- Escribe SOLO el texto narrativo, sin encabezados, sin nombre de la residencia, sin fecha, sin hora, sin nombre del responsable al inicio ni al final
+- Texto corrido en párrafos, sin asteriscos, guiones, emojis, tablas ni símbolos
+- Lenguaje directo y sencillo, sin frases como "lo cual es una buena noticia", "lo que siempre es positivo", "lo cual es siempre un momento especial" ni similares
+- NO menciones signos vitales bajo ninguna forma: ni tensión arterial, FC, SpO₂, FR, temperatura, mmHg, lpm, rpm ni °C
+- NO agregues frases de cierre ni despedidas
+- Máximo 200 palabras
 
-DATOS DEL TURNO:
-- Residencia: Residencia Refugio Mendoza
-- Residente: ${residente?.nombre || 'No especificado'}
-- Turno: ${turno}
-- Fecha: ${fecha}
-- Hora del reporte: ${horaReporte}
-- Responsable: ${enfermero}
-
-ESTADO AL RECIBIR: ${estadoAlRecibir || 'No especificado'}
-ACTITUD Y CONDUCTA: ${Array.isArray(actitudConducta) && actitudConducta.length ? actitudConducta.join(', ') : 'Sin datos'}
-CUIDADOS REALIZADOS: ${cuidadosTexto || 'Sin datos'}
-ALIMENTACIÓN: ${alimentacion || 'Sin datos'}
-MEDICAMENTOS: ${medicamentos || 'Sin datos'}
-${turno !== 'Nocturno' && actividadesDia && actividadesDia !== 'N/A' ? `ACTIVIDADES DEL DÍA: ${actividadesDia}` : ''}
-OBSERVACIONES ESPECIALES: ${Array.isArray(observacionesEspeciales) && observacionesEspeciales.length ? observacionesEspeciales.join(', ') : 'Sin novedades'}
-${notasAdicionales?.trim() ? `NOTAS ADICIONALES: ${notasAdicionales.trim()}` : ''}
-
-SIGNOS VITALES:
-• T/A: ${signosVitales?.ta_sistolica || '--'}/${signosVitales?.ta_diastolica || '--'} mmHg
-• FC: ${signosVitales?.fc || '--'} lpm
-• SpO2: ${signosVitales?.spo2 || '--'}%
-• FR: ${signosVitales?.fr || '--'} rpm
-• Temperatura: ${signosVitales?.temperatura || '--'}°C
-
-Redacta el reporte completo integrando TODA la información anterior de forma narrativa y fluida. Incluye: encabezado con nombre de la residencia y datos del turno, cuerpo narrativo, signos vitales en formato tabla de texto, y firma del responsable.`;
+INFORMACIÓN DEL TURNO:
+Residente: ${residente?.nombre || 'No especificado'}
+Estado al recibir: ${estadoAlRecibir || 'No especificado'}
+Actitud y conducta: ${Array.isArray(actitudConducta) && actitudConducta.length ? actitudConducta.join(', ') : 'Sin datos'}
+Cuidados realizados: ${cuidadosTexto || 'Sin datos'}
+Alimentación: ${alimentacion || 'Sin datos'}
+Medicamentos: ${medicamentos || 'Sin datos'}
+${turno !== 'Nocturno' && actividadesDia && actividadesDia !== 'N/A' ? `Actividades del día: ${actividadesDia}` : ''}
+Observaciones: ${Array.isArray(observacionesEspeciales) && observacionesEspeciales.length ? observacionesEspeciales.join(', ') : 'Sin novedades'}
+${notasAdicionales?.trim() ? `Notas adicionales: ${notasAdicionales.trim()}` : ''}`;
 
   try {
     const message = await client.messages.create({
