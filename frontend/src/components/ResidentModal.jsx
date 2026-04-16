@@ -13,7 +13,6 @@ export default function ResidentModal({ residente, onSave, onClose }) {
   const [form, setForm] = useState({
     nombre:       residente?.nombre       || '',
     iniciales:    residente?.iniciales    || '',
-    habitacion:   residente?.habitacion   || '',
     fecha_ingreso: residente?.fecha_ingreso || '',
   })
 
@@ -50,7 +49,6 @@ export default function ResidentModal({ residente, onSave, onClose }) {
 
     if (!form.nombre.trim())         return setError('El nombre es obligatorio.')
     if (!form.iniciales.trim())      return setError('Las iniciales son obligatorias.')
-    if (!form.habitacion.trim())     return setError('El número de habitación es obligatorio.')
     if (!form.fecha_ingreso)         return setError('La fecha de ingreso es obligatoria.')
 
     setSaving(true)
@@ -59,7 +57,6 @@ export default function ResidentModal({ residente, onSave, onClose }) {
         ...form,
         nombre:    form.nombre.trim(),
         iniciales: form.iniciales.trim().toUpperCase(),
-        habitacion: form.habitacion.trim(),
       })
     } catch (err) {
       setError(err.message || 'Error al guardar. Intenta de nuevo.')
@@ -112,17 +109,6 @@ export default function ResidentModal({ residente, onSave, onClose }) {
                 <span className="input-hint">2 letras, auto-generadas</span>
               </div>
 
-              <div className="field-group">
-                <label htmlFor="habitacion">Habitación *</label>
-                <input
-                  id="habitacion"
-                  className="input"
-                  type="text"
-                  placeholder="Ej. 12A"
-                  value={form.habitacion}
-                  onChange={handleChange('habitacion')}
-                />
-              </div>
             </div>
 
             <div className="field-group">

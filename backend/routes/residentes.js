@@ -13,7 +13,6 @@ function generarIniciales(nombre) {
 /** Limpia y valida los campos; lanza Error con mensaje legible */
 function sanitizar(body) {
   const nombre        = (body.nombre        || '').trim();
-  const habitacion    = (body.habitacion    || '').trim();
   const fecha_ingreso = (body.fecha_ingreso || '').trim();
 
   let iniciales = (body.iniciales || '').trim().toUpperCase().slice(0, 2);
@@ -21,10 +20,9 @@ function sanitizar(body) {
 
   if (!nombre)        throw new Error('El nombre es obligatorio.');
   if (!iniciales)     throw new Error('No se pudieron generar las iniciales.');
-  if (!habitacion)    throw new Error('El número de habitación es obligatorio.');
   if (!fecha_ingreso) throw new Error('La fecha de ingreso es obligatoria.');
 
-  return { nombre, iniciales, habitacion, fecha_ingreso };
+  return { nombre, iniciales, fecha_ingreso };
 }
 
 // GET /api/residentes
@@ -48,8 +46,8 @@ router.post('/', (req, res) => {
 
   try {
     const result = db.prepare(
-      'INSERT INTO residentes (nombre, iniciales, habitacion, fecha_ingreso) VALUES (?, ?, ?, ?)'
-    ).run([campos.nombre, campos.iniciales, campos.habitacion, campos.fecha_ingreso]);
+      'INSERT INTO residentes (nombre, iniciales, fecha_ingreso) VALUES (?, ?, ?)'
+    ).run([campos.nombre, campos.iniciales, campos.fecha_ingreso]);
 
     const id = Number(result.lastInsertRowid);
     res.status(201).json({ id, ...campos });
@@ -71,8 +69,8 @@ router.put('/:id', (req, res) => {
 
   try {
     db.prepare(
-      'UPDATE residentes SET nombre=?, iniciales=?, habitacion=?, fecha_ingreso=? WHERE id=?'
-    ).run([campos.nombre, campos.iniciales, campos.habitacion, campos.fecha_ingreso, id]);
+      'UPDATE residentes SET nombre=?, iniciales=?, fecha_ingreso=? WHERE id=?'
+    ).run([campos.nombre, campos.iniciales, campos.fecha_ingreso, id]);
 
     const updated = db.prepare('SELECT * FROM residentes WHERE id = ?').get([id]);
     if (!updated) return res.status(404).json({ error: 'Residente no encontrado' });
