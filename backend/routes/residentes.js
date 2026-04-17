@@ -46,8 +46,8 @@ router.post('/', (req, res) => {
 
   try {
     const result = db.prepare(
-      'INSERT INTO residentes (nombre, iniciales, fecha_ingreso) VALUES (?, ?, ?)'
-    ).run([campos.nombre, campos.iniciales, campos.fecha_ingreso]);
+      'INSERT INTO residentes (nombre, iniciales, habitacion, fecha_ingreso) VALUES (?, ?, ?, ?)'
+    ).run([campos.nombre, campos.iniciales, '', campos.fecha_ingreso]);
 
     const id = Number(result.lastInsertRowid);
     res.status(201).json({ id, ...campos });
@@ -70,7 +70,7 @@ router.put('/:id', (req, res) => {
   try {
     db.prepare(
       'UPDATE residentes SET nombre=?, iniciales=?, fecha_ingreso=? WHERE id=?'
-    ).run([campos.nombre, campos.iniciales, campos.fecha_ingreso, id]);
+    ).run([campos.nombre, campos.iniciales, campos.fecha_ingreso, Number(id)]);
 
     const updated = db.prepare('SELECT * FROM residentes WHERE id = ?').get([id]);
     if (!updated) return res.status(404).json({ error: 'Residente no encontrado' });
