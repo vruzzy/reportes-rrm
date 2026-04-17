@@ -62,7 +62,7 @@ ESTILO:
 DATOS DEL TURNO:
 Residente: ${residente?.nombre || 'No especificado'}
 Turno: ${turno}
-Estado al recibir: ${estadoAlRecibir || 'No especificado'}
+Estado al recibir: ${Array.isArray(estadoAlRecibir) && estadoAlRecibir.length ? estadoAlRecibir.join(', ') : estadoAlRecibir || 'No especificado'}
 Actitud y conducta: ${Array.isArray(actitudConducta) && actitudConducta.length ? actitudConducta.join(', ') : 'Sin datos'}
 Cuidados realizados: ${cuidadosTexto || 'Sin datos'}
 Alimentación: ${alimentacion || 'Sin datos'}

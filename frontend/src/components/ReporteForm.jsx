@@ -135,7 +135,7 @@ function nowHHMM()  {
 
 function emptyForm() {
   return {
-    estadoAlRecibir:       '',
+    estadoAlRecibir:       [],
     actitudConducta:       [],
     cuidadosRealizados:    [],
     cambiosPañal:          0,
@@ -374,7 +374,7 @@ export default function ReporteForm() {
 
       {/* ── ESTADO AL RECIBIR ── */}
       <SectionCard title="Estado al recibir">
-        <ChipSingle
+        <ChipMulti
           options={OPT.estadoAlRecibir}
           selected={form.estadoAlRecibir}
           onSelect={setField('estadoAlRecibir')}
