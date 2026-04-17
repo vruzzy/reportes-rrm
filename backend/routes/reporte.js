@@ -46,25 +46,29 @@ router.post('/generar-reporte', async (req, res) => {
     ? sueño.join(', ')
     : '';
 
-  const prompt = `Redacta el cuerpo narrativo del reporte de turno de la Residencia Refugio Mendoza para la familia del residente.
+  const prompt = `Redacta el reporte de turno de enfermería de la Residencia Refugio Mendoza. Escribe exactamente como lo haría una enfermera en un reporte real: directo, práctico y sin adornos.
 
-REGLAS ESTRICTAS:
-- Escribe SOLO el texto narrativo, sin encabezados, sin nombre de la residencia, sin fecha, sin hora, sin nombre del responsable al inicio ni al final
-- Texto corrido en párrafos, sin asteriscos, guiones, emojis, tablas ni símbolos
-- Lenguaje directo y sencillo, sin frases como "lo cual es una buena noticia", "lo que siempre es positivo", "lo cual es siempre un momento especial" ni similares
-- NO menciones signos vitales bajo ninguna forma: ni tensión arterial, FC, SpO₂, FR, temperatura, mmHg, lpm, rpm ni °C
-- NO agregues frases de cierre ni despedidas
-- Máximo 200 palabras
+ESTILO:
+- Empieza siempre con "Se recibe paciente..."
+- Frases cortas y concretas, en tercera persona
+- Usa expresiones como: "se administra medicación en tiempo y forma", "accesible durante su baño", "se mantiene hidratado/a", "sin eventualidades"
+- Termina con "Sin eventualidades." si no hay nada que reportar
+- Sin asteriscos, guiones, emojis, tablas ni símbolos
+- NO menciones signos vitales de ninguna forma
+- NO uses frases como "lo cual es una buena noticia", "es motivo de satisfacción" ni similares
+- NO pongas encabezados, ni nombre de residencia, ni firma al inicio ni al final
+- Máximo 150 palabras
 
-INFORMACIÓN DEL TURNO:
+DATOS DEL TURNO:
 Residente: ${residente?.nombre || 'No especificado'}
+Turno: ${turno}
 Estado al recibir: ${estadoAlRecibir || 'No especificado'}
 Actitud y conducta: ${Array.isArray(actitudConducta) && actitudConducta.length ? actitudConducta.join(', ') : 'Sin datos'}
 Cuidados realizados: ${cuidadosTexto || 'Sin datos'}
 Alimentación: ${alimentacion || 'Sin datos'}
 Medicamentos: ${medicamentos || 'Sin datos'}
 ${turno !== 'Nocturno' && actividadesTexto ? `Actividades del día: ${actividadesTexto}` : ''}
-${turno === 'Nocturno' && sueñoTexto ? `Sueño: ${sueñoTexto}` : ''}
+${turno === 'Nocturno' && sueñoTexto ? `Sueño durante el turno: ${sueñoTexto}` : ''}
 Observaciones: ${Array.isArray(observacionesEspeciales) && observacionesEspeciales.length ? observacionesEspeciales.join(', ') : 'Sin novedades'}
 ${notasAdicionales?.trim() ? `Notas adicionales: ${notasAdicionales.trim()}` : ''}`;
 

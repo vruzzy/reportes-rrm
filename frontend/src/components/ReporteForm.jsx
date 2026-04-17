@@ -6,25 +6,30 @@ import logo from '../assets/logo.jpg'
 
 const OPT = {
   estadoAlRecibir: [
-    'Estable', 'Somnoliento/a', 'En reposo', 'Con dolor referido',
-    'Confuso/a', 'Agitado/a', 'Postrado/a',
+    'Activo/a con buen semblante', 'Tranquilo/a', 'Somnoliento/a',
+    'Dormido/a en su habitación', 'Sentado/a en su silla',
+    'En reposo', 'Agitado/a', 'Confuso/a',
+    'Con dolor referido', 'Postrado/a',
   ],
   actitudConducta: [
-    'Tranquilo/a', 'Colaborador/a', 'Comunicativo/a', 'Ansioso/a',
-    'Agitado/a', 'Desorientado/a', 'Llanto fácil', 'Resistente a cuidados', 'Renuente',
+    'Accesible', 'Cooperador/a', 'Tranquilo/a', 'Comunicativo/a',
+    'Ansioso/a', 'Agitado/a', 'Hiperactivo/a', 'Poco accesible',
+    'Desorientado/a', 'Llanto fácil', 'Renuente', 'Resistente a cuidados',
   ],
   cuidadosRealizados: [
     'Baño completo', 'Baño parcial', 'Cambio de pañal',
-    'Higiene oral', 'Cambio de ropa', 'Movilización',
-    'Curaciones', 'Posición antiescara', 'Sonda vesical atendida',
+    'Aseo bucal', 'Cambio de ropa', 'Movilizaciones posturales',
+    'Curaciones', 'Posición antiescara', 'Aplicación de insulina',
+    'Nebulización', 'Cambio de parche', 'Sonda vesical atendida',
+    'Glicemia capilar',
   ],
   alimentacion: [
-    'Completa', 'Parcial (>50%)', 'Parcial (<50%)',
+    'Completa', 'Completa con asistencia', 'Parcial (>50%)', 'Parcial (<50%)',
     'Rechazó alimentación', 'Por sonda nasogástrica',
     'Líquidos únicamente', 'Ayuno indicado',
   ],
   medicamentos: [
-    'Administrados sin incidencias', 'Administrados con resistencia',
+    'Administrados en tiempo y forma', 'Administrados con resistencia',
     'Dosis omitida (indicar motivo)', 'Sin medicación programada',
   ],
   actividadesDia: [
@@ -33,18 +38,20 @@ const OPT = {
     'Eucaristía del día', 'No participó', 'N/A',
   ],
   observacionesEspeciales: [
-    'Sin novedades', 'Caída o incidente', 'Visita familiar',
-    'Salida médica', 'Salió de la residencia', 'Cambio en estado general',
-    'Revisión médica en turno', 'Comunicación con familia',
-    'Traslado hospitalario',
+    'Sin novedades', 'Visita familiar', 'Revisión médica en turno',
+    'Análisis de laboratorio', 'Glicemia capilar tomada',
+    'Salió de la residencia', 'Salida médica',
+    'Caída o incidente', 'Cambio en estado general',
+    'Comunicación con familia', 'Traslado hospitalario',
   ],
   sueño: [
     'Durmió bien toda la noche',
     'Sueño intermitente',
-    'Se levantó varias veces',
+    'Se levantó al baño durante la noche',
+    'Se intentó levantar, requirió asistencia',
     'No logró conciliar el sueño',
+    'Se mantuvo bajo vigilancia',
     'Requirió asistencia para acostarse',
-    'Se mantuvo en vigilancia',
   ],
 }
 
