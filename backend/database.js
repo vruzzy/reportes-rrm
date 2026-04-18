@@ -37,4 +37,9 @@ db.exec(`
   )
 `);
 
+// Migración: agregar columnas nuevas si no existen
+try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_original TEXT DEFAULT ''`) } catch {}
+try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_editado TEXT DEFAULT ''`) } catch {}
+try { db.exec(`ALTER TABLE aprendizaje DROP COLUMN ultimo_reporte`) } catch {}
+
 module.exports = db;
