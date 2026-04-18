@@ -25,4 +25,15 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS aprendizaje (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    residente_id     INTEGER NOT NULL UNIQUE,
+    notas_acumuladas TEXT DEFAULT '',
+    ultimo_reporte   TEXT DEFAULT '',
+    actualizado_en   TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (residente_id) REFERENCES residentes(id)
+  )
+`);
+
 module.exports = db;

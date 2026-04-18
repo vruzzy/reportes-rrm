@@ -1,7 +1,18 @@
 import { useEffect, useState } from 'react'
 import { generarPDF } from '../utils/pdfGenerator'
 
-export default function BottomSheet({ reporte, formData, onClose }) {
+async function guardarAprendizaje(residenteId, notas, reporteFinal) {
+  if (!residenteId) return;
+  try {
+    await fetch('/api/guardar-aprendizaje', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ residente_id: residenteId, notas, reporte_final: reporteFinal }),
+    });
+  } catch {}
+}
+
+export default function BottomSheet({ reporte, formData, residenteId, notasAdicionales, onClose }) {
   const [toast, setToast]         = useState('')
   const [editing, setEditing]     = useState(false)
   const [texto, setTexto]         = useState(reporte)
@@ -19,6 +30,7 @@ export default function BottomSheet({ reporte, formData, onClose }) {
   }
 
   async function handleCopy() {
+    guardarAprendizaje(residenteId, notasAdicionales, texto);
     try {
       await navigator.clipboard.writeText(texto)
       showToast('✓ Mensaje copiado')
@@ -36,6 +48,7 @@ export default function BottomSheet({ reporte, formData, onClose }) {
   }
 
   async function handleDownloadPDF() {
+    guardarAprendizaje(residenteId, notasAdicionales, texto);
     try {
       await generarPDF({
         reporte:       texto,
