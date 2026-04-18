@@ -1,7 +1,12 @@
 const { Database } = require('node-sqlite3-wasm');
 const path = require('path');
+const fs = require('fs');
 
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'rrm.db');
+
+// Remove stale lock left by a crashed process
+const lockPath = `${DB_PATH}.lock`;
+try { fs.rmSync(lockPath, { recursive: true, force: true }) } catch {}
 
 const db = new Database(DB_PATH);
 
