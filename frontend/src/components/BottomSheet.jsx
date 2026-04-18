@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react'
 import { generarPDF } from '../utils/pdfGenerator'
 
-async function guardarAprendizaje(residenteId, notas, reporteFinal) {
+async function guardarAprendizaje(residenteId, notas, reporteOriginal, reporteEditado) {
   if (!residenteId) return;
   try {
     await fetch('/api/guardar-aprendizaje', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ residente_id: residenteId, notas, reporte_final: reporteFinal }),
+      body: JSON.stringify({ residente_id: residenteId, notas, reporte_original: reporteOriginal, reporte_editado: reporteEditado }),
     });
   } catch {}
 }
 
-export default function BottomSheet({ reporte, formData, residenteId, notasAdicionales, onClose }) {
+export default function BottomSheet({ reporte, reporteOriginal, formData, residenteId, notasAdicionales, onClose }) {
   const [toast, setToast]         = useState('')
   const [editing, setEditing]     = useState(false)
   const [texto, setTexto]         = useState(reporte)
@@ -30,7 +30,7 @@ export default function BottomSheet({ reporte, formData, residenteId, notasAdici
   }
 
   async function handleCopy() {
-    guardarAprendizaje(residenteId, notasAdicionales, texto);
+    guardarAprendizaje(residenteId, notasAdicionales, reporteOriginal, texto);
     try {
       await navigator.clipboard.writeText(texto)
       showToast('✓ Mensaje copiado')
@@ -48,7 +48,7 @@ export default function BottomSheet({ reporte, formData, residenteId, notasAdici
   }
 
   async function handleDownloadPDF() {
-    guardarAprendizaje(residenteId, notasAdicionales, texto);
+    guardarAprendizaje(residenteId, notasAdicionales, reporteOriginal, texto);
     try {
       await generarPDF({
         reporte:       texto,

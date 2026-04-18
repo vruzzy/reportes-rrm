@@ -582,6 +582,7 @@ export default function ReporteForm() {
       {showSheet && reporteTexto && (
         <BottomSheet
           reporte={reporteTexto}
+          reporteOriginal={reporteTexto}
           formData={formDataForPDF}
           residenteId={selectedRes?.id}
           notasAdicionales={form.notasAdicionales}

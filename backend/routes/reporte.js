@@ -5,19 +5,19 @@ const db = require('../database');
 
 // POST /api/guardar-aprendizaje
 router.post('/guardar-aprendizaje', (req, res) => {
-  const { residente_id, notas, reporte_final } = req.body;
+  const { residente_id, notas, reporte_original, reporte_editado } = req.body;
   if (!residente_id) return res.status(400).json({ error: 'residente_id requerido' });
 
   const existing = db.get('SELECT id FROM aprendizaje WHERE residente_id = ?', [residente_id]);
   if (existing) {
     db.run(
-      `UPDATE aprendizaje SET notas_acumuladas = ?, ultimo_reporte = ?, actualizado_en = datetime('now') WHERE residente_id = ?`,
-      [notas || '', reporte_final || '', residente_id]
+      `UPDATE aprendizaje SET notas_acumuladas = ?, reporte_original = ?, reporte_editado = ?, actualizado_en = datetime('now') WHERE residente_id = ?`,
+      [notas || '', reporte_original || '', reporte_editado || '', residente_id]
     );
   } else {
     db.run(
-      `INSERT INTO aprendizaje (residente_id, notas_acumuladas, ultimo_reporte) VALUES (?, ?, ?)`,
-      [residente_id, notas || '', reporte_final || '']
+      `INSERT INTO aprendizaje (residente_id, notas_acumuladas, reporte_original, reporte_editado) VALUES (?, ?, ?, ?)`,
+      [residente_id, notas || '', reporte_original || '', reporte_editado || '']
     );
   }
   res.json({ ok: true });
@@ -68,14 +68,20 @@ router.post('/generar-reporte', async (req, res) => {
     : '';
 
   const aprendizaje = residente?.id
-    ? db.get('SELECT notas_acumuladas, ultimo_reporte FROM aprendizaje WHERE residente_id = ?', [residente.id])
+    ? db.get('SELECT notas_acumuladas, reporte_original, reporte_editado FROM aprendizaje WHERE residente_id = ?', [residente.id])
     : null;
 
   const contextAprendizaje = aprendizaje
     ? [
-        aprendizaje.notas_acumuladas?.trim() ? `Notas guardadas sobre este paciente: ${aprendizaje.notas_acumuladas.trim()}` : '',
-        aprendizaje.ultimo_reporte?.trim() ? `Ejemplo de reporte anterior aprobado para este paciente:\n"${aprendizaje.ultimo_reporte.trim()}"` : '',
-      ].filter(Boolean).join('\n')
+        aprendizaje.notas_acumuladas?.trim()
+          ? `Notas sobre este paciente: ${aprendizaje.notas_acumuladas.trim()}`
+          : '',
+        aprendizaje.reporte_original?.trim() && aprendizaje.reporte_editado?.trim()
+          ? `En el reporte anterior, el texto generado fue corregido. Aprende de estas correcciones para no cometer los mismos errores:\nVERSIÓN ORIGINAL (con errores):\n"${aprendizaje.reporte_original.trim()}"\nVERSIÓN CORREGIDA (usa este estilo):\n"${aprendizaje.reporte_editado.trim()}"`
+          : aprendizaje.reporte_editado?.trim()
+          ? `Reporte anterior aprobado para este paciente:\n"${aprendizaje.reporte_editado.trim()}"`
+          : '',
+      ].filter(Boolean).join('\n\n')
     : '';
 
   const prompt = `Redacta el reporte de turno de enfermería de la Residencia Refugio Mendoza. Escribe exactamente como lo haría una enfermera en un reporte real: directo, práctico y sin adornos.
