@@ -689,6 +689,24 @@ body {
   word-break: break-word;
 }
 
+.reporte-textarea {
+  width: 100%;
+  min-height: 300px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  outline: none;
+}
+
 .sheet-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
