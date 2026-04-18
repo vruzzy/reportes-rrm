@@ -32,7 +32,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🏥 RRM Backend corriendo en http://localhost:${PORT}`);
   console.log(`   Anthropic API Key: ${process.env.ANTHROPIC_API_KEY ? '✅ configurada' : '❌ NO configurada'}`);
   console.log(`   Entorno: ${process.env.NODE_ENV || 'development'}\n`);
