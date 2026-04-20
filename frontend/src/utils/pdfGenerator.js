@@ -177,7 +177,8 @@ export async function generarPDF({ reporte, residente, turno, fecha, horaReporte
   doc.text('Residencia Refugio Mendoza  |  Mérida, Yucatán', W - M, 287, { align: 'right' })
 
   // ── SAVE ─────────────────────────────────────────────────────────────────
-  const name = (residente?.nombre || 'residente').split(' ')[0].replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, '')
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-  doc.save(`reporte-${name}-${date}.pdf`)
+  const name  = (residente?.nombre || 'residente').split(' ')[0].replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, '')
+  const date  = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const turnoSlug = (turno || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z-]/g, '')
+  doc.save(`reporte-${name}-${turnoSlug}-${date}.pdf`)
 }
