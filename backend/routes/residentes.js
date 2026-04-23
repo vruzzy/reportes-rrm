@@ -88,7 +88,10 @@ router.put('/:id', (req, res) => {
 // DELETE /api/residentes/:id
 router.delete('/:id', (req, res) => {
   try {
-    const result = db.prepare('DELETE FROM residentes WHERE id = ?').run([req.params.id]);
+    const id = Number(req.params.id)
+    // Eliminar registros relacionados antes de borrar el residente
+    db.prepare('DELETE FROM aprendizaje WHERE residente_id = ?').run([id])
+    const result = db.prepare('DELETE FROM residentes WHERE id = ?').run([id]);
     if (result.changes === 0) return res.status(404).json({ error: 'Residente no encontrado' });
     res.json({ ok: true });
   } catch (err) {
