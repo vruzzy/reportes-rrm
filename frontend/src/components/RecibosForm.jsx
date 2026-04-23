@@ -365,7 +365,7 @@ function ReciboFormView({ residente, year, month, onBack, onSuccess }) {
         <div className="section-label">Pago</div>
         <div className="input-group">
           <label>Valor ($)</label>
-          <input className="input" type="number" min="0" step="100"
+          <input className="input" type="number" min="0" step="any"
             value={form.valor} onChange={setField('valor')}
             inputMode="numeric" style={{ fontWeight: 700, fontSize: 18 }} />
         </div>

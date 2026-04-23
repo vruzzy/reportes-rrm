@@ -157,7 +157,7 @@ export default function ResidentModal({ residente, onSave, onClose }) {
                   type="number"
                   placeholder="0"
                   min="0"
-                  step="100"
+                  step="any"
                   value={form.mensualidad}
                   onChange={handleChange('mensualidad')}
                   inputMode="numeric"
