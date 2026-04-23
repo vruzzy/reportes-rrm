@@ -225,6 +225,7 @@ export default function ReporteForm() {
   async function handleGenerate() {
     if (!selectedRes) return setError('Selecciona un residente antes de generar el reporte.')
     if (!form.enfermero.trim()) return setError('Ingresa el nombre del enfermero/a responsable.')
+    if (!form.notasAdicionales.trim()) return setError('Las notas adicionales son obligatorias. Describe algo específico del turno antes de generar.')
     setError('')
     setGenerating(true)
 
@@ -536,15 +537,15 @@ export default function ReporteForm() {
       </SectionCard>
 
       {/* ── NOTAS ADICIONALES ── */}
-      <SectionCard title="Notas adicionales">
+      <SectionCard title="Notas adicionales *">
         <textarea
           className="input"
           name="notasAdicionales"
           value={form.notasAdicionales}
           onChange={handleTextInput}
-          placeholder="Escribe aquí cualquier información extra que no esté en las opciones anteriores…"
+          placeholder="Campo obligatorio — describe algo específico del turno: comportamiento, evento, cambio en el estado del residente, etc."
           rows={4}
-          style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: 15 }}
+          style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: 15, borderColor: form.notasAdicionales.trim() ? undefined : 'var(--primary)' }}
         />
       </SectionCard>
 
