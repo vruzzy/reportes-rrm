@@ -63,5 +63,6 @@ try { db.exec(`ALTER TABLE residentes ADD COLUMN mensualidad REAL DEFAULT 0`) } 
 try { db.exec(`ALTER TABLE residentes ADD COLUMN ciudad TEXT DEFAULT 'Mérida, Yucatán'`) } catch {}
 try { db.exec(`ALTER TABLE residentes ADD COLUMN familiar TEXT DEFAULT ''`) } catch {}
 try { db.exec(`ALTER TABLE residentes ADD COLUMN dia_pago INTEGER DEFAULT 1`) } catch {}
+try { db.exec(`ALTER TABLE residentes ADD COLUMN frecuencia TEXT DEFAULT 'mensual'`) } catch {}
 
 module.exports = db;

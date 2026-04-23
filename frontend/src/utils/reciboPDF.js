@@ -24,6 +24,35 @@ export function sumarUnMes(fechaStr) {
   return `${ny}-${String(nm).padStart(2,'0')}-${String(nd).padStart(2,'0')}`
 }
 
+export function sumarDias(fechaStr, dias) {
+  const d = new Date(fechaStr + 'T00:00:00')
+  d.setDate(d.getDate() + dias)
+  return d.toISOString().slice(0, 10)
+}
+
+// Devuelve todas las semanas (Lun-Dom) que tienen días en el mes indicado
+// diaSemana: 1=Lunes...7=Domingo
+export function getSemanasDelMes(year, month, diaSemana = 1) {
+  const jsDay = diaSemana === 7 ? 0 : diaSemana  // 1=Mon...6=Sat, 7->0=Sun
+  const primerDia  = new Date(year, month - 1, 1)
+  const ultimoDia  = new Date(year, month, 0)
+  const semanas    = []
+
+  // Buscar el primer jsDay en o antes del primer día del mes
+  const inicio = new Date(primerDia)
+  const diff   = (inicio.getDay() - jsDay + 7) % 7
+  inicio.setDate(inicio.getDate() - diff)
+
+  let cur = new Date(inicio)
+  while (cur <= ultimoDia) {
+    const desde = cur.toISOString().slice(0, 10)
+    const hasta = sumarDias(desde, 6)
+    semanas.push({ desde, hasta })
+    cur.setDate(cur.getDate() + 7)
+  }
+  return semanas
+}
+
 export function formatFechaLarga(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number)
   return `${String(d).padStart(2,'0')} DE ${MESES[m-1]} DE ${y}`
@@ -85,7 +114,7 @@ export function cantidadEnLetras(monto) {
 // ── Generación del PDF ────────────────────────────────────────────────────────
 
 export async function generarReciboPDF(datos) {
-  const { numero, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones } = datos
+  const { numero, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones, frecuencia } = datos
 
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
@@ -233,9 +262,10 @@ export async function generarReciboPDF(datos) {
   const desdeStr = `${String(dd1).padStart(2,'0')} DE ${MESES[dm1-1]}`
   const hastaStr = `${String(dd2).padStart(2,'0')} DE ${MESES[dm2-1]} DE ${dy2}`
 
+  const tituloPago = frecuencia === 'semanal' ? 'PAGO DE CENTRO DE DÍA CORRESPONDIENTE' : 'PAGO DE HOSPEDAJE CORRESPONDIENTE'
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(11)
-  pdf.text('PAGO DE HOSPEDAJE CORRESPONDIENTE', PW / 2, BOX_Y + 11, { align: 'center' })
+  pdf.text(tituloPago, PW / 2, BOX_Y + 11, { align: 'center' })
   pdf.text(`DEL ${desdeStr} AL ${hastaStr}.`, PW / 2, BOX_Y + 20, { align: 'center' })
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

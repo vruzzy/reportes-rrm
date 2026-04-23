@@ -17,6 +17,7 @@ export default function ResidentModal({ residente, onSave, onClose }) {
     ciudad:        residente?.ciudad        || 'Mérida, Yucatán',
     mensualidad:   residente?.mensualidad   != null ? String(residente.mensualidad) : '',
     familiar:      residente?.familiar      || '',
+    frecuencia:    residente?.frecuencia    || 'mensual',
     dia_pago:      residente?.dia_pago      != null ? String(residente.dia_pago) : '1',
   })
 
@@ -64,7 +65,10 @@ export default function ResidentModal({ residente, onSave, onClose }) {
         ciudad:      form.ciudad.trim() || 'Mérida, Yucatán',
         mensualidad: parseFloat(form.mensualidad) || 0,
         familiar:    form.familiar.trim(),
-        dia_pago:    Math.min(31, Math.max(1, parseInt(form.dia_pago) || 1)),
+        frecuencia:  form.frecuencia,
+        dia_pago:    form.frecuencia === 'semanal'
+          ? Math.min(7,  Math.max(1, parseInt(form.dia_pago) || 1))
+          : Math.min(31, Math.max(1, parseInt(form.dia_pago) || 1)),
       })
     } catch (err) {
       setError(err.message || 'Error al guardar. Intenta de nuevo.')
@@ -132,22 +136,56 @@ export default function ResidentModal({ residente, onSave, onClose }) {
               <span className="input-hint">Aparece en el campo "Recibí" del recibo</span>
             </div>
 
+            {/* Frecuencia de pago */}
+            <div className="field-group">
+              <label>Frecuencia de pago</label>
+              <div className="turn-toggle" style={{ marginTop: 6 }}>
+                {[['mensual','Mensual'],['semanal','Semanal']].map(([v,l]) => (
+                  <button key={v} type="button"
+                    className={`turn-btn${form.frecuencia === v ? ' active' : ''}`}
+                    onClick={() => setForm(f => ({ ...f, frecuencia: v, dia_pago: v === 'semanal' ? '1' : f.dia_pago }))}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Día de pago */}
             <div className="field-row">
               <div className="field-group" style={{ flex: 1 }}>
-                <label htmlFor="dia_pago">Día de pago</label>
-                <input
-                  id="dia_pago"
-                  className="input"
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={form.dia_pago}
-                  onChange={handleChange('dia_pago')}
-                  inputMode="numeric"
-                  style={{ textAlign: 'center', fontWeight: 700, fontSize: 18 }}
-                />
-                <span className="input-hint">Del 1 al 31</span>
+                {form.frecuencia === 'semanal' ? (
+                  <>
+                    <label htmlFor="dia_pago">Día de cobro</label>
+                    <select
+                      id="dia_pago"
+                      className="input"
+                      value={form.dia_pago}
+                      onChange={handleChange('dia_pago')}
+                      style={{ fontWeight: 600 }}
+                    >
+                      {['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map((d,i) => (
+                        <option key={i+1} value={i+1}>{d}</option>
+                      ))}
+                    </select>
+                    <span className="input-hint">Día de inicio de la semana</span>
+                  </>
+                ) : (
+                  <>
+                    <label htmlFor="dia_pago">Día de pago</label>
+                    <input
+                      id="dia_pago"
+                      className="input"
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={form.dia_pago}
+                      onChange={handleChange('dia_pago')}
+                      inputMode="numeric"
+                      style={{ textAlign: 'center', fontWeight: 700, fontSize: 18 }}
+                    />
+                    <span className="input-hint">Del 1 al 31</span>
+                  </>
+                )}
               </div>
               <div className="field-group" style={{ flex: 2 }}>
                 <label htmlFor="mensualidad">Mensualidad ($)</label>

@@ -5,6 +5,8 @@ import {
   cantidadEnLetras,
   formatPesos,
   sumarUnMes,
+  sumarDias,
+  getSemanasDelMes,
 } from '../utils/reciboPDF'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -73,12 +75,35 @@ function CalendarioView({ onGenerar }) {
     }
   }
 
-  // Cruzar residentes con recibos del mes
-  const items = residentes.map(res => {
-    const recibo = recibos.find(r => r.residente_id === res.id)
-    return { res, recibo, pagado: Boolean(recibo) }
-  }).sort((a, b) => {
-    // Primero pendientes, luego pagados; dentro de cada grupo por dia_pago
+  const DIAS_NOMBRE = ['','Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
+
+  function labelSemana(desde, hasta) {
+    const [,dm,dd] = desde.split('-').map(Number)
+    const [,hm,hd] = hasta.split('-').map(Number)
+    const M = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+    return dm === hm ? `${dd} - ${hd} ${M[dm]}` : `${dd} ${M[dm]} - ${hd} ${M[hm]}`
+  }
+
+  // Generar items para el calendario
+  const items = []
+  residentes.forEach(res => {
+    if (res.frecuencia === 'semanal') {
+      const semanas = getSemanasDelMes(year, month, res.dia_pago || 1)
+      semanas.forEach(({ desde, hasta }) => {
+        const recibo = recibos.find(r => r.residente_id === res.id && r.periodo_de === desde)
+        items.push({
+          res, recibo, pagado: Boolean(recibo),
+          tipo: 'semanal', desde, hasta,
+          label: labelSemana(desde, hasta),
+        })
+      })
+    } else {
+      const recibo = recibos.find(r => r.residente_id === res.id)
+      items.push({ res, recibo, pagado: Boolean(recibo), tipo: 'mensual' })
+    }
+  })
+
+  items.sort((a, b) => {
     if (a.pagado !== b.pagado) return a.pagado ? 1 : -1
     return (a.res.dia_pago || 1) - (b.res.dia_pago || 1)
   })
@@ -112,12 +137,13 @@ function CalendarioView({ onGenerar }) {
               <div style={sectionTitle('#e65c00')}>
                 Pendientes · {pendientes.length}
               </div>
-              {pendientes.map(({ res }) => (
+              {pendientes.map((item, i) => (
                 <ResidenteRow
-                  key={res.id}
-                  res={res}
+                  key={`${item.res.id}-${item.desde || 'mensual'}-${i}`}
+                  res={item.res}
                   pagado={false}
-                  onGenerar={() => onGenerar(res, year, month)}
+                  semanaLabel={item.label}
+                  onGenerar={() => onGenerar(item.res, year, month, item.desde, item.hasta)}
                 />
               ))}
             </div>
@@ -129,14 +155,15 @@ function CalendarioView({ onGenerar }) {
               <div style={sectionTitle('#2e7d32')}>
                 Pagados · {pagados.length}
               </div>
-              {pagados.map(({ res, recibo }) => (
+              {pagados.map((item, i) => (
                 <ResidenteRow
-                  key={res.id}
-                  res={res}
+                  key={`${item.res.id}-${item.desde || 'mensual'}-paid-${i}`}
+                  res={item.res}
                   pagado
-                  recibo={recibo}
-                  deleting={deletingId === recibo?.id}
-                  onEliminar={() => handleEliminar(recibo.id)}
+                  recibo={item.recibo}
+                  semanaLabel={item.label}
+                  deleting={deletingId === item.recibo?.id}
+                  onEliminar={() => handleEliminar(item.recibo.id)}
                 />
               ))}
             </div>
@@ -169,7 +196,7 @@ function sectionTitle(color) {
   }
 }
 
-function ResidenteRow({ res, pagado, recibo, deleting, onGenerar, onEliminar }) {
+function ResidenteRow({ res, pagado, recibo, deleting, onGenerar, onEliminar, semanaLabel }) {
   return (
     <div style={{
       background: 'var(--surface)',
@@ -199,7 +226,7 @@ function ResidenteRow({ res, pagado, recibo, deleting, onGenerar, onEliminar }) 
         </div>
         <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
           {res.familiar && <span>{res.familiar} · </span>}
-          Día {res.dia_pago || 1}
+          {semanaLabel ? semanaLabel : `Día ${res.dia_pago || 1}`}
           {pagado && recibo && <span> · {formatPesos(recibo.valor)}</span>}
         </div>
       </div>
@@ -236,16 +263,17 @@ function ResidenteRow({ res, pagado, recibo, deleting, onGenerar, onEliminar }) 
 
 // ── Subcomponente: formulario de recibo ───────────────────────────────────────
 
-function ReciboFormView({ residente, year, month, onBack, onSuccess }) {
+function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, onBack, onSuccess }) {
   const [nextNum, setNextNum] = useState('')
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
 
-  // Fecha del día de pago en el mes seleccionado
+  // Calcular fechas según frecuencia
+  const esSemanal  = residente.frecuencia === 'semanal'
   const diasEnMes  = new Date(year, month, 0).getDate()
   const diaReal    = Math.min(residente.dia_pago || 1, diasEnMes)
-  const fechaBase  = `${year}-${String(month).padStart(2,'0')}-${String(diaReal).padStart(2,'0')}`
-  const fechaHasta = sumarUnMes(fechaBase)
+  const fechaBase  = desdeOverride || `${year}-${String(month).padStart(2,'0')}-${String(diaReal).padStart(2,'0')}`
+  const fechaHasta = hastaOverride || (esSemanal ? sumarDias(fechaBase, 6) : sumarUnMes(fechaBase))
 
   const [form, setForm] = useState({
     fecha:         fechaBase,
@@ -280,6 +308,7 @@ function ReciboFormView({ residente, year, month, onBack, onSuccess }) {
         valor:         parseFloat(form.valor),
         forma_pago:    form.forma_pago,
         observaciones: form.observaciones,
+        frecuencia:    residente.frecuencia || 'mensual',
       }
 
       const res = await fetch('/api/recibos', {
@@ -427,15 +456,19 @@ function ReciboFormView({ residente, year, month, onBack, onSuccess }) {
 
 export default function RecibosForm() {
   const [view, setView]           = useState('calendar') // 'calendar' | 'form'
-  const [selectedRes, setSelectedRes] = useState(null)
-  const [selectedYear, setSelectedYear] = useState(null)
+  const [selectedRes,   setSelectedRes]   = useState(null)
+  const [selectedYear,  setSelectedYear]  = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(null)
-  const [calendarKey, setCalendarKey] = useState(0)
+  const [selectedDesde, setSelectedDesde] = useState(null)
+  const [selectedHasta, setSelectedHasta] = useState(null)
+  const [calendarKey,   setCalendarKey]   = useState(0)
 
-  function handleGenerar(res, year, month) {
+  function handleGenerar(res, year, month, desde, hasta) {
     setSelectedRes(res)
     setSelectedYear(year)
     setSelectedMonth(month)
+    setSelectedDesde(desde || null)
+    setSelectedHasta(hasta || null)
     setView('form')
   }
 
@@ -470,6 +503,8 @@ export default function RecibosForm() {
           residente={selectedRes}
           year={selectedYear}
           month={selectedMonth}
+          desdeOverride={selectedDesde}
+          hastaOverride={selectedHasta}
           onBack={handleBack}
           onSuccess={handleSuccess}
         />
