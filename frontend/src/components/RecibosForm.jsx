@@ -413,7 +413,7 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
       <div className="form-card">
         <div className="section-label">Forma de pago</div>
         <div className="turn-toggle">
-          {[['efectivo','Efectivo'],['cheque','Cheque'],['otros','Otros']].map(([v,l]) => (
+          {[['efectivo','Efectivo'],['transferencia','Transferencia'],['otros','Otros']].map(([v,l]) => (
             <button key={v} type="button"
               className={`turn-btn${form.forma_pago === v ? ' active' : ''}`}
               onClick={() => setForm(f => ({ ...f, forma_pago: v }))}>

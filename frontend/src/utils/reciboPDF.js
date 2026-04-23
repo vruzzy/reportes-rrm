@@ -221,29 +221,25 @@ export async function generarReciboPDF(datos) {
 
   const CHECK_Y = TABLE_Y + ROW_H * 3 + 5
   const BOX_S   = 4.5
-  const formas  = ['efectivo', 'cheque', 'otros']
-  const labels  = ['EFECTIVO', 'CHEQUE', 'OTROS']
+  const formas  = ['efectivo', 'transferencia', 'otros']
+  const labels  = ['EFECTIVO', 'TRANSFERENCIA', 'OTROS']
   let fx = ML
 
   formas.forEach((f, i) => {
-    // Cuadro del checkbox
     pdf.setDrawColor(0, 0, 0)
     pdf.setLineWidth(0.35)
     pdf.rect(fx, CHECK_Y, BOX_S, BOX_S)
 
-    // Palomita dibujada con líneas (no depende de fuentes)
     if (forma_pago === f) {
-      pdf.setDrawColor(0, 0, 0)
-      pdf.setLineWidth(0.8)
-      pdf.line(fx + 0.8, CHECK_Y + 2.2, fx + 1.8, CHECK_Y + 3.4)
-      pdf.line(fx + 1.8, CHECK_Y + 3.4, fx + 3.8, CHECK_Y + 0.8)
+      // Relleno gris claro
+      pdf.setFillColor(60, 60, 60)
+      pdf.rect(fx + 0.7, CHECK_Y + 0.7, BOX_S - 1.4, BOX_S - 1.4, 'F')
     }
 
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(9)
-    pdf.setDrawColor(0, 0, 0)
     pdf.text(labels[i], fx + BOX_S + 2, CHECK_Y + 3.5)
-    fx += BOX_S + pdf.getTextWidth(labels[i]) + 10
+    fx += BOX_S + pdf.getTextWidth(labels[i]) + 8
   })
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
