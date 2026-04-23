@@ -1,20 +1,31 @@
 import { useState } from 'react'
 import ReporteForm from './components/ReporteForm'
 import ResidentesAdmin from './components/ResidentesAdmin'
+import RecibosForm from './components/RecibosForm'
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('reporte')
+  const [activeTab, setActiveTab] = useState('recibos')
 
   return (
     <div className="app-wrapper">
       <div className="app-content">
-        {activeTab === 'reporte'
-          ? <ReporteForm />
-          : <ResidentesAdmin />
-        }
+        {activeTab === 'recibos'    && <RecibosForm />}
+        {activeTab === 'reporte'    && <ReporteForm />}
+        {activeTab === 'residentes' && <ResidentesAdmin />}
       </div>
 
       <nav className="bottom-nav">
+        <button
+          className={`nav-tab${activeTab === 'recibos' ? ' active' : ''}`}
+          onClick={() => setActiveTab('recibos')}
+        >
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+          <span>Recibos</span>
+        </button>
+
         <button
           className={`nav-tab${activeTab === 'reporte' ? ' active' : ''}`}
           onClick={() => setActiveTab('reporte')}
@@ -25,7 +36,7 @@ export default function App() {
             <line x1="9" y1="12" x2="15" y2="12"/>
             <line x1="9" y1="16" x2="13" y2="16"/>
           </svg>
-          <span>Nuevo Reporte</span>
+          <span>Reportes</span>
         </button>
 
         <button

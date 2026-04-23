@@ -1,0 +1,24 @@
+{
+  "name": "reportes-rrm",
+  "version": "1.0.0",
+  "description": "Aplicación web para gestionar reportes de turno de enfermería en la Residencia Refugio Mendoza, Mérida, Yucatán.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently --names \"API,WEB\" --prefix-colors \"cyan,magenta\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vruzzy/reportes-rrm.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vruzzy/reportes-rrm/issues"
+  },
+  "homepage": "https://github.com/vruzzy/reportes-rrm#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

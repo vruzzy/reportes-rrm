@@ -11,9 +11,13 @@ export default function ResidentModal({ residente, onSave, onClose }) {
   const editing = Boolean(residente)
 
   const [form, setForm] = useState({
-    nombre:       residente?.nombre       || '',
-    iniciales:    residente?.iniciales    || '',
-    fecha_ingreso: residente?.fecha_ingreso || '',
+    nombre:        residente?.nombre        || '',
+    iniciales:     residente?.iniciales     || '',
+    fecha_ingreso: residente?.fecha_ingreso || new Date().toISOString().slice(0,10),
+    ciudad:        residente?.ciudad        || 'Mérida, Yucatán',
+    mensualidad:   residente?.mensualidad   != null ? String(residente.mensualidad) : '',
+    familiar:      residente?.familiar      || '',
+    dia_pago:      residente?.dia_pago      != null ? String(residente.dia_pago) : '1',
   })
 
   const [autoInitials, setAutoInitials] = useState(!editing)
@@ -47,16 +51,20 @@ export default function ResidentModal({ residente, onSave, onClose }) {
     e.preventDefault()
     setError('')
 
-    if (!form.nombre.trim())         return setError('El nombre es obligatorio.')
-    if (!form.iniciales.trim())      return setError('Las iniciales son obligatorias.')
-    if (!form.fecha_ingreso)         return setError('La fecha de ingreso es obligatoria.')
+    if (!form.nombre.trim())    return setError('El nombre es obligatorio.')
+    if (!form.iniciales.trim()) return setError('Las iniciales son obligatorias.')
+    if (!form.familiar.trim())  return setError('El nombre del familiar es obligatorio.')
 
     setSaving(true)
     try {
       await onSave({
         ...form,
-        nombre:    form.nombre.trim(),
-        iniciales: form.iniciales.trim().toUpperCase(),
+        nombre:      form.nombre.trim(),
+        iniciales:   form.iniciales.trim().toUpperCase(),
+        ciudad:      form.ciudad.trim() || 'Mérida, Yucatán',
+        mensualidad: parseFloat(form.mensualidad) || 0,
+        familiar:    form.familiar.trim(),
+        dia_pago:    Math.min(31, Math.max(1, parseInt(form.dia_pago) || 1)),
       })
     } catch (err) {
       setError(err.message || 'Error al guardar. Intenta de nuevo.')
@@ -75,12 +83,11 @@ export default function ResidentModal({ residente, onSave, onClose }) {
 
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            {error && (
-              <div className="error-banner" role="alert">{error}</div>
-            )}
+            {error && <div className="error-banner" role="alert">{error}</div>}
 
+            {/* Nombre del residente */}
             <div className="field-group">
-              <label htmlFor="nombre">Nombre completo *</label>
+              <label htmlFor="nombre">Nombre del residente *</label>
               <input
                 id="nombre"
                 className="input"
@@ -106,28 +113,73 @@ export default function ResidentModal({ residente, onSave, onClose }) {
                   maxLength={2}
                   style={{ textTransform: 'uppercase', textAlign: 'center', fontWeight: 700, fontSize: 18 }}
                 />
-                <span className="input-hint">2 letras, auto-generadas</span>
+                <span className="input-hint">Auto-generadas</span>
               </div>
+            </div>
 
+            {/* Familiar */}
+            <div className="field-group">
+              <label htmlFor="familiar">Nombre del familiar *</label>
+              <input
+                id="familiar"
+                className="input"
+                type="text"
+                placeholder="Ej. Juan González López"
+                value={form.familiar}
+                onChange={handleChange('familiar')}
+                autoComplete="off"
+              />
+              <span className="input-hint">Aparece en el campo "Recibí" del recibo</span>
+            </div>
+
+            {/* Día de pago */}
+            <div className="field-row">
+              <div className="field-group" style={{ flex: 1 }}>
+                <label htmlFor="dia_pago">Día de pago</label>
+                <input
+                  id="dia_pago"
+                  className="input"
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={form.dia_pago}
+                  onChange={handleChange('dia_pago')}
+                  inputMode="numeric"
+                  style={{ textAlign: 'center', fontWeight: 700, fontSize: 18 }}
+                />
+                <span className="input-hint">Del 1 al 31</span>
+              </div>
+              <div className="field-group" style={{ flex: 2 }}>
+                <label htmlFor="mensualidad">Mensualidad ($)</label>
+                <input
+                  id="mensualidad"
+                  className="input"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step="100"
+                  value={form.mensualidad}
+                  onChange={handleChange('mensualidad')}
+                  inputMode="numeric"
+                />
+              </div>
             </div>
 
             <div className="field-group">
-              <label htmlFor="fecha_ingreso">Fecha de ingreso *</label>
+              <label htmlFor="ciudad">Ciudad</label>
               <input
-                id="fecha_ingreso"
+                id="ciudad"
                 className="input"
-                type="date"
-                value={form.fecha_ingreso}
-                onChange={handleChange('fecha_ingreso')}
-                max={new Date().toISOString().slice(0, 10)}
+                type="text"
+                placeholder="Mérida, Yucatán"
+                value={form.ciudad}
+                onChange={handleChange('ciudad')}
               />
             </div>
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn-modal-cancel" onClick={onClose}>
-              Cancelar
-            </button>
+            <button type="button" className="btn-modal-cancel" onClick={onClose}>Cancelar</button>
             <button type="submit" className="btn-modal-save" disabled={saving}>
               {saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Agregar residente'}
             </button>

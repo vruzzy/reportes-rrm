@@ -37,9 +37,31 @@ db.exec(`
   )
 `);
 
-// Migración: agregar columnas nuevas si no existen
+db.exec(`
+  CREATE TABLE IF NOT EXISTS recibos (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    numero       INTEGER NOT NULL,
+    residente_id INTEGER,
+    nombre       TEXT NOT NULL,
+    ciudad       TEXT NOT NULL DEFAULT 'Mérida, Yucatán',
+    fecha        TEXT NOT NULL,
+    periodo_de   TEXT NOT NULL,
+    periodo_hasta TEXT NOT NULL,
+    valor        REAL NOT NULL,
+    forma_pago   TEXT NOT NULL DEFAULT 'efectivo',
+    observaciones TEXT DEFAULT '',
+    creado_en    TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (residente_id) REFERENCES residentes(id) ON DELETE SET NULL
+  )
+`);
+
+// Migraciones: agregar columnas nuevas si no existen
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_original TEXT DEFAULT ''`) } catch {}
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_editado TEXT DEFAULT ''`) } catch {}
 try { db.exec(`ALTER TABLE aprendizaje DROP COLUMN ultimo_reporte`) } catch {}
+try { db.exec(`ALTER TABLE residentes ADD COLUMN mensualidad REAL DEFAULT 0`) } catch {}
+try { db.exec(`ALTER TABLE residentes ADD COLUMN ciudad TEXT DEFAULT 'Mérida, Yucatán'`) } catch {}
+try { db.exec(`ALTER TABLE residentes ADD COLUMN familiar TEXT DEFAULT ''`) } catch {}
+try { db.exec(`ALTER TABLE residentes ADD COLUMN dia_pago INTEGER DEFAULT 1`) } catch {}
 
 module.exports = db;

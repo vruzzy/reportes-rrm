@@ -14,6 +14,10 @@ function generarIniciales(nombre) {
 function sanitizar(body) {
   const nombre        = (body.nombre        || '').trim();
   const fecha_ingreso = (body.fecha_ingreso || '').trim();
+  const ciudad        = (body.ciudad        || 'Mérida, Yucatán').trim();
+  const mensualidad   = parseFloat(body.mensualidad) || 0;
+  const familiar      = (body.familiar      || '').trim();
+  const dia_pago      = Math.min(31, Math.max(1, parseInt(body.dia_pago) || 1));
 
   let iniciales = (body.iniciales || '').trim().toUpperCase().slice(0, 2);
   if (!iniciales && nombre) iniciales = generarIniciales(nombre);
@@ -22,7 +26,7 @@ function sanitizar(body) {
   if (!iniciales)     throw new Error('No se pudieron generar las iniciales.');
   if (!fecha_ingreso) throw new Error('La fecha de ingreso es obligatoria.');
 
-  return { nombre, iniciales, fecha_ingreso };
+  return { nombre, iniciales, fecha_ingreso, ciudad, mensualidad, familiar, dia_pago };
 }
 
 // GET /api/residentes
@@ -46,11 +50,12 @@ router.post('/', (req, res) => {
 
   try {
     const result = db.prepare(
-      'INSERT INTO residentes (nombre, iniciales, habitacion, fecha_ingreso) VALUES (?, ?, ?, ?)'
-    ).run([campos.nombre, campos.iniciales, '', campos.fecha_ingreso]);
+      'INSERT INTO residentes (nombre, iniciales, habitacion, fecha_ingreso, ciudad, mensualidad, familiar, dia_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run([campos.nombre, campos.iniciales, '', campos.fecha_ingreso, campos.ciudad, campos.mensualidad, campos.familiar, campos.dia_pago]);
 
     const id = Number(result.lastInsertRowid);
-    res.status(201).json({ id, ...campos });
+    const nuevo = db.prepare('SELECT * FROM residentes WHERE id = ?').get([id]);
+    res.status(201).json(nuevo);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -69,8 +74,8 @@ router.put('/:id', (req, res) => {
 
   try {
     db.prepare(
-      'UPDATE residentes SET nombre=?, iniciales=?, fecha_ingreso=? WHERE id=?'
-    ).run([campos.nombre, campos.iniciales, campos.fecha_ingreso, Number(id)]);
+      'UPDATE residentes SET nombre=?, iniciales=?, fecha_ingreso=?, ciudad=?, mensualidad=?, familiar=?, dia_pago=? WHERE id=?'
+    ).run([campos.nombre, campos.iniciales, campos.fecha_ingreso, campos.ciudad, campos.mensualidad, campos.familiar, campos.dia_pago, Number(id)]);
 
     const updated = db.prepare('SELECT * FROM residentes WHERE id = ?').get([id]);
     if (!updated) return res.status(404).json({ error: 'Residente no encontrado' });
