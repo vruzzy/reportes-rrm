@@ -294,15 +294,6 @@ export async function generarReciboPDF(datos) {
   pdf.setFont('helvetica', 'bold');  pdf.setFontSize(10)
   pdf.text('M.N', PW / 2, footY, { align: 'center' })
 
-  // Línea de firma
-  footY += 24
-  const FIRMA_W = 70
-  const FIRMA_X = (PW - FIRMA_W) / 2
-  pdf.setDrawColor(0, 0, 0)
-  pdf.setLineWidth(0.4)
-  pdf.line(FIRMA_X, footY, FIRMA_X + FIRMA_W, footY)
-  pdf.setFont('helvetica', 'normal');  pdf.setFontSize(8)
-  pdf.text('Firma y sello', PW / 2, footY + 5, { align: 'center' })
 
   return pdf
 }
