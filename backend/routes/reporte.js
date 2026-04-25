@@ -84,32 +84,32 @@ router.post('/generar-reporte', async (req, res) => {
       ].filter(Boolean).join('\n\n')
     : '';
 
-  const prompt = `Redacta el reporte de turno de enfermería de la Residencia Refugio Mendoza. Escribe exactamente como lo haría una enfermera en un reporte real: directo, práctico y sin adornos.
+  const prompt = `Redacta el reporte de turno de enfermería de la Residencia Refugio Mendoza. Escribe como enfermera profesional: directo, concreto, en tercera persona.
 
-ESTILO:
-- Empieza siempre con "Se recibe paciente..."
-- Frases cortas y concretas, en tercera persona
-- Usa expresiones como: "se administra medicación en tiempo y forma", "accesible durante su baño", "se mantiene hidratado/a", "sin eventualidades"
-- Termina con "Sin eventualidades." si no hay nada que reportar
-- Sin asteriscos, guiones, emojis, tablas ni símbolos
-- NO menciones signos vitales de ninguna forma
-- NO uses frases como "lo cual es una buena noticia", "es motivo de satisfacción" ni similares
-- NO pongas encabezados, ni nombre de residencia, ni firma al inicio ni al final
+REGLAS DE ESTILO:
+- Varía el inicio del reporte: puedes usar "Se recibe al paciente...", "Al inicio del turno...", "Durante el turno...", "El paciente se encuentra..." u otras frases naturales. NUNCA uses siempre el mismo inicio.
+- Frases cortas y concretas. Sin adornos ni valoraciones positivas vacías.
+- PROHIBIDO usar "buen semblante" a menos que esté en el estado al recibir. Usa sinónimos variados: "estable", "tranquilo/a", "sin alteraciones aparentes", "en buen estado general", etc.
+- Describe EXACTAMENTE lo que dicen los datos. Si está agitado, dilo. Si rechazó alimentos, dilo.
+- Las NOTAS ADICIONALES son lo más importante — deben quedar reflejadas claramente en el reporte.
+- Sin asteriscos, guiones, emojis ni encabezados
+- NO menciones signos vitales
+- NO uses frases como "es motivo de satisfacción", "lo cual es positivo" ni similares
 - Máximo 150 palabras
 
 DATOS DEL TURNO:
 Residente: ${residente?.nombre || 'No especificado'}
 Turno: ${turno}
-Estado al recibir: ${Array.isArray(estadoAlRecibir) && estadoAlRecibir.length ? estadoAlRecibir.join(', ') : estadoAlRecibir || 'No especificado'}
+Estado al recibir: ${Array.isArray(estadoAlRecibir) && estadoAlRecibir.length ? estadoAlRecibir.join(', ') : 'No especificado'}
 Actitud y conducta: ${Array.isArray(actitudConducta) && actitudConducta.length ? actitudConducta.join(', ') : 'Sin datos'}
 Cuidados realizados: ${cuidadosTexto || 'Sin datos'}
 Alimentación: ${alimentacion || 'Sin datos'}
 Medicamentos: ${medicamentos || 'Sin datos'}
 ${turno !== 'Nocturno' && actividadesTexto ? `Actividades del día: ${actividadesTexto}` : ''}
-${turno === 'Nocturno' && sueñoTexto ? `Sueño durante el turno: ${sueñoTexto}` : ''}
-Observaciones: ${Array.isArray(observacionesEspeciales) && observacionesEspeciales.length ? observacionesEspeciales.join(', ') : 'Sin novedades'}
-${notasAdicionales?.trim() ? `Notas adicionales: ${notasAdicionales.trim()}` : ''}
-${contextAprendizaje ? `\nCONTEXTO APRENDIDO DE REPORTES ANTERIORES:\n${contextAprendizaje}` : ''}`;
+${turno === 'Nocturno' && sueñoTexto ? `Sueño: ${sueñoTexto}` : ''}
+Observaciones especiales: ${Array.isArray(observacionesEspeciales) && observacionesEspeciales.length ? observacionesEspeciales.join(', ') : 'Sin novedades'}
+NOTAS ADICIONALES (integra esto en el reporte): ${notasAdicionales?.trim() || ''}
+${contextAprendizaje ? `\nCONTEXTO DE REPORTES ANTERIORES — aprende el estilo y NO repitas las mismas frases:\n${contextAprendizaje}` : ''}`;
 
   try {
     const message = await client.messages.create({
