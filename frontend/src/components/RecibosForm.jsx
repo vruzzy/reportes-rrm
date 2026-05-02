@@ -282,6 +282,8 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
     valor:         residente.mensualidad ? String(residente.mensualidad) : '',
     forma_pago:    'efectivo',
     observaciones: `Mensualidad ${residente.nombre.trim().split(/\s+/)[0]}`,
+    concepto:      esSemanal ? 'centro_dia' : 'hospedaje',
+    conceptoOtro:  '',
   })
 
   useEffect(() => {
@@ -298,6 +300,10 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
     if (!form.valor || parseFloat(form.valor) <= 0) return setError('Ingresa un valor válido.')
     setGenerating(true)
     try {
+      const conceptoFinal = form.concepto === 'otro'
+        ? (form.conceptoOtro.trim() || 'hospedaje')
+        : form.concepto
+
       const datos = {
         numero:        nextNum,
         nombre:        residente.familiar || residente.nombre,
@@ -308,7 +314,7 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
         valor:         parseFloat(form.valor),
         forma_pago:    form.forma_pago,
         observaciones: form.observaciones,
-        frecuencia:    residente.frecuencia || 'mensual',
+        concepto:      conceptoFinal,
       }
 
       const res = await fetch('/api/recibos', {
@@ -376,7 +382,7 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
 
       {/* Período */}
       <div className="form-card">
-        <div className="section-label">Período de hospedaje</div>
+        <div className="section-label">Período</div>
         <div className="date-row">
           <div className="input-group">
             <label>Del</label>
@@ -387,6 +393,30 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
             <input className="input" type="date" value={form.periodo_hasta} onChange={setField('periodo_hasta')} />
           </div>
         </div>
+      </div>
+
+      {/* Concepto */}
+      <div className="form-card">
+        <div className="section-label">Concepto de pago</div>
+        <div className="turn-toggle">
+          {[['hospedaje','Hospedaje'],['centro_dia','Centro de Día'],['otro','Otro']].map(([v,l]) => (
+            <button key={v} type="button"
+              className={`turn-btn${form.concepto === v ? ' active' : ''}`}
+              onClick={() => setForm(f => ({ ...f, concepto: v }))}>
+              {l}
+            </button>
+          ))}
+        </div>
+        {form.concepto === 'otro' && (
+          <input
+            className="input"
+            type="text"
+            placeholder="Ej: Medicamentos, Servicio especial…"
+            value={form.conceptoOtro}
+            onChange={e => setForm(f => ({ ...f, conceptoOtro: e.target.value }))}
+            style={{ marginTop: 10 }}
+          />
+        )}
       </div>
 
       {/* Valor */}

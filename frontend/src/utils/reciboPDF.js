@@ -114,7 +114,7 @@ export function cantidadEnLetras(monto) {
 // ── Generación del PDF ────────────────────────────────────────────────────────
 
 export async function generarReciboPDF(datos) {
-  const { numero, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones, frecuencia } = datos
+  const { numero, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones, concepto } = datos
 
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
@@ -258,7 +258,11 @@ export async function generarReciboPDF(datos) {
   const desdeStr = `${String(dd1).padStart(2,'0')} DE ${MESES[dm1-1]}`
   const hastaStr = `${String(dd2).padStart(2,'0')} DE ${MESES[dm2-1]} DE ${dy2}`
 
-  const tituloPago = frecuencia === 'semanal' ? 'PAGO DE CENTRO DE DÍA CORRESPONDIENTE' : 'PAGO DE HOSPEDAJE CORRESPONDIENTE'
+  const tituloPago = concepto === 'centro_dia'
+    ? 'PAGO DE CENTRO DE DÍA CORRESPONDIENTE'
+    : concepto && concepto !== 'hospedaje'
+      ? `PAGO DE ${concepto.toUpperCase()} CORRESPONDIENTE`
+      : 'PAGO DE HOSPEDAJE CORRESPONDIENTE'
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(11)
   pdf.text(tituloPago, PW / 2, BOX_Y + 11, { align: 'center' })
