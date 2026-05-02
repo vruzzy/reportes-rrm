@@ -114,7 +114,7 @@ export function cantidadEnLetras(monto) {
 // ── Generación del PDF ────────────────────────────────────────────────────────
 
 export async function generarReciboPDF(datos) {
-  const { numero, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones, concepto } = datos
+  const { numero, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones, concepto, mostrarPeriodo } = datos
 
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
@@ -265,8 +265,11 @@ export async function generarReciboPDF(datos) {
       : 'PAGO DE HOSPEDAJE CORRESPONDIENTE'
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(11)
-  pdf.text(tituloPago, PW / 2, BOX_Y + 11, { align: 'center' })
-  pdf.text(`DEL ${desdeStr} AL ${hastaStr}.`, PW / 2, BOX_Y + 20, { align: 'center' })
+  const tituloY = mostrarPeriodo === false ? BOX_Y + BOX_H / 2 + 2 : BOX_Y + 11
+  pdf.text(tituloPago, PW / 2, tituloY, { align: 'center' })
+  if (mostrarPeriodo !== false) {
+    pdf.text(`DEL ${desdeStr} AL ${hastaStr}.`, PW / 2, BOX_Y + 20, { align: 'center' })
+  }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // PIE

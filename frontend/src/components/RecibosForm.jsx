@@ -284,6 +284,7 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
     observaciones: `Mensualidad ${residente.nombre.trim().split(/\s+/)[0]}`,
     concepto:      esSemanal ? 'centro_dia' : 'hospedaje',
     conceptoOtro:  '',
+    mostrarPeriodo: true,
   })
 
   useEffect(() => {
@@ -312,9 +313,10 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
         periodo_de:    form.periodo_de,
         periodo_hasta: form.periodo_hasta,
         valor:         parseFloat(form.valor),
-        forma_pago:    form.forma_pago,
-        observaciones: form.observaciones,
-        concepto:      conceptoFinal,
+        forma_pago:     form.forma_pago,
+        observaciones:  form.observaciones,
+        concepto:       conceptoFinal,
+        mostrarPeriodo: form.mostrarPeriodo,
       }
 
       const res = await fetch('/api/recibos', {
@@ -382,17 +384,29 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
 
       {/* Período */}
       <div className="form-card">
-        <div className="section-label">Período</div>
-        <div className="date-row">
-          <div className="input-group">
-            <label>Del</label>
-            <input className="input" type="date" value={form.periodo_de} onChange={setField('periodo_de')} />
-          </div>
-          <div className="input-group">
-            <label>Al</label>
-            <input className="input" type="date" value={form.periodo_hasta} onChange={setField('periodo_hasta')} />
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div className="section-label" style={{ marginBottom: 0 }}>Período</div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={form.mostrarPeriodo}
+              onChange={e => setForm(f => ({ ...f, mostrarPeriodo: e.target.checked }))}
+            />
+            Incluir en PDF
+          </label>
         </div>
+        {form.mostrarPeriodo && (
+          <div className="date-row">
+            <div className="input-group">
+              <label>Del</label>
+              <input className="input" type="date" value={form.periodo_de} onChange={setField('periodo_de')} />
+            </div>
+            <div className="input-group">
+              <label>Al</label>
+              <input className="input" type="date" value={form.periodo_hasta} onChange={setField('periodo_hasta')} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Concepto */}
