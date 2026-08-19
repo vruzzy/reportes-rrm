@@ -55,6 +55,48 @@ const OPT = {
   ],
 }
 
+// ── VITAL RANGES (adultos mayores 65+) ─────────────────────────────────────────
+
+const VITAL_RANGES = {
+  ta_sistolica:  { min: 90,  max: 160, label: 'T/A Sistólica',     unit: 'mmHg', low: 'Hipotensión', high: 'Hipertensión' },
+  ta_diastolica: { min: 60,  max: 100, label: 'T/A Diastólica',    unit: 'mmHg', low: 'Hipotensión', high: 'Hipertensión' },
+  fc:            { min: 50,  max: 110, label: 'Frec. cardíaca',     unit: 'lpm',  low: 'Bradicardia', high: 'Taquicardia'  },
+  spo2:          { min: 92,  max: 100, label: 'SpO₂',               unit: '%',    low: 'Hipoxemia',   high: null           },
+  fr:            { min: 10,  max: 25,  label: 'Frec. respiratoria', unit: 'rpm',  low: 'Bradipnea',   high: 'Taquipnea'    },
+  temperatura: {
+    label: 'Temperatura', unit: '°C',
+    classify: (n) => {
+      if (n < 35.0)  return 'Hipotermia'
+      if (n < 36.1)  return 'Temperatura baja'
+      if (n <= 37.2) return null               // normal
+      if (n <= 37.9) return 'Febrícula'
+      if (n <= 39.0) return 'Fiebre'
+      if (n <= 40.0) return 'Fiebre alta'
+      return 'Hiperpirexia'
+    },
+  },
+}
+
+function getVitalAlerts(sv) {
+  return Object.entries(VITAL_RANGES).reduce((acc, [key, r]) => {
+    const val = sv[key]
+    if (val === '' || val === null || val === undefined) return acc
+    const num = parseFloat(val)
+    if (isNaN(num)) return acc
+
+    if (r.classify) {
+      const tag = r.classify(num)
+      if (tag) acc.push({ key, label: r.label, value: `${num} ${r.unit}`, tag })
+    } else {
+      if (num < r.min)
+        acc.push({ key, label: r.label, value: `${num} ${r.unit}`, tag: r.low })
+      else if (r.max !== null && num > r.max)
+        acc.push({ key, label: r.label, value: `${num} ${r.unit}`, tag: r.high })
+    }
+    return acc
+  }, [])
+}
+
 // ── HELPER COMPONENTS ───────────────────────────────────────────────────────────
 
 function ChipSingle({ options, selected, onSelect }) {
@@ -106,12 +148,16 @@ function SectionCard({ title, children }) {
   )
 }
 
-function VitalInput({ label, name, value, onChange, placeholder, unit, min, max }) {
+function VitalInput({ label, name, value, onChange, placeholder, unit, min, max, hasAlert }) {
   return (
     <div className="vital-group">
-      <div className="vital-label">{label} {unit && <span style={{ fontWeight: 400, textTransform: 'none' }}>({unit})</span>}</div>
+      <div className={`vital-label${hasAlert ? ' vital-label-alert' : ''}`}>
+        {label}{' '}
+        {unit && <span style={{ fontWeight: 400, textTransform: 'none' }}>({unit})</span>}
+        {hasAlert && <span className="vital-alert-icon"> ⚠</span>}
+      </div>
       <input
-        className="input"
+        className={`input${hasAlert ? ' input-alert' : ''}`}
         type="number"
         name={name}
         value={value}
@@ -121,6 +167,39 @@ function VitalInput({ label, name, value, onChange, placeholder, unit, min, max 
         max={max}
         inputMode="numeric"
       />
+    </div>
+  )
+}
+
+function VitalAlertModal({ alerts, onConfirm, onCancel }) {
+  return (
+    <div className="confirm-backdrop" onClick={onCancel}>
+      <div className="confirm-dialog vital-alert-dialog" onClick={e => e.stopPropagation()}>
+        <div className="confirm-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <h3>Signos vitales fuera de rango</h3>
+        <p>Los siguientes valores están fuera del rango normal para adultos mayores:</p>
+        <ul className="vital-alert-list">
+          {alerts.map((a, i) => (
+            <li key={i}>
+              <span className="vital-alert-row">
+                <strong>{a.label}:</strong> {a.value}
+                <span className="vital-alert-tag">{a.tag}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="vital-alert-question">¿Los valores registrados son correctos?</p>
+        <div className="confirm-actions">
+          <button className="btn-confirm-cancel" onClick={onCancel}>Corregir</button>
+          <button className="btn-confirm-vital" onClick={onConfirm}>Sí, continuar</button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -162,17 +241,17 @@ function emptyForm() {
 // ── MAIN COMPONENT ──────────────────────────────────────────────────────────────
 
 export default function ReporteForm() {
-  const [residentes, setResidentes]       = useState([])
-  const [loadingRes, setLoadingRes]       = useState(true)
-  const [selectedRes, setSelectedRes]     = useState(null)
-  const [turno, setTurno]                 = useState('Matutino-Vespertino')
-  const [form, setForm]                   = useState(emptyForm)
-  const [generating, setGenerating]       = useState(false)
-  const [reporteTexto, setReporteTexto]   = useState('')
-  const [showSheet, setShowSheet]         = useState(false)
-  const [error, setError]                 = useState('')
+  const [residentes, setResidentes]         = useState([])
+  const [loadingRes, setLoadingRes]         = useState(true)
+  const [selectedRes, setSelectedRes]       = useState(null)
+  const [turno, setTurno]                   = useState('Matutino-Vespertino')
+  const [form, setForm]                     = useState(emptyForm)
+  const [generating, setGenerating]         = useState(false)
+  const [reporteTexto, setReporteTexto]     = useState('')
+  const [showSheet, setShowSheet]           = useState(false)
+  const [error, setError]                   = useState('')
+  const [showVitalConfirm, setShowVitalConfirm] = useState(false)
 
-  // Load residents on mount
   const loadResidentes = useCallback(async () => {
     setLoadingRes(true)
     try {
@@ -189,7 +268,6 @@ export default function ReporteForm() {
 
   useEffect(() => { loadResidentes() }, [loadResidentes])
 
-  // Reset time when component mounts
   useEffect(() => {
     setForm(f => ({ ...f, horaReporte: nowHHMM(), fecha: todayISO() }))
   }, [])
@@ -222,13 +300,10 @@ export default function ReporteForm() {
 
   function isPañalSelected() { return form.cuidadosRealizados.includes('Cambio de pañal') }
 
-  async function handleGenerate() {
-    if (!selectedRes) return setError('Selecciona un residente antes de generar el reporte.')
-    if (!form.enfermero.trim()) return setError('Ingresa el nombre del enfermero/a responsable.')
-    if (!form.notasAdicionales.trim()) return setError('Las notas adicionales son obligatorias. Describe algo específico del turno antes de generar.')
+  async function doGenerate() {
+    setShowVitalConfirm(false)
     setError('')
     setGenerating(true)
-
     try {
       const res = await fetch('/api/generar-reporte', {
         method:  'POST',
@@ -252,7 +327,6 @@ export default function ReporteForm() {
           notasAdicionales:        form.notasAdicionales,
         }),
       })
-
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Error del servidor')
       setReporteTexto(json.reporte)
@@ -263,6 +337,24 @@ export default function ReporteForm() {
       setGenerating(false)
     }
   }
+
+  async function handleGenerate() {
+    if (!selectedRes) return setError('Selecciona un residente antes de generar el reporte.')
+    if (!form.enfermero.trim()) return setError('Ingresa el nombre del enfermero/a responsable.')
+    if (!form.notasAdicionales.trim()) return setError('Las notas adicionales son obligatorias. Describe algo específico del turno antes de generar.')
+
+    const alerts = getVitalAlerts(form.signosVitales)
+    if (alerts.length > 0) {
+      setError('')
+      setShowVitalConfirm(true)
+      return
+    }
+
+    doGenerate()
+  }
+
+  const vitalAlerts    = getVitalAlerts(form.signosVitales)
+  const alertKeys      = new Set(vitalAlerts.map(a => a.key))
 
   const formDataForPDF = {
     residente:    selectedRes,
@@ -407,7 +499,6 @@ export default function ReporteForm() {
           ))}
         </div>
 
-        {/* Diaper counter — only visible when "Cambio de pañal" is selected */}
         {isPañalSelected() && (
           <div className="diaper-row" style={{ marginTop: 12 }}>
             <div className="diaper-counter">
@@ -480,10 +571,16 @@ export default function ReporteForm() {
         <div className="vitals-grid">
           {/* T/A — full width, two inputs */}
           <div className="vital-group ta-group">
-            <div className="vital-label">T/A <span style={{ fontWeight:400, textTransform:'none' }}>(mmHg)</span></div>
+            <div className={`vital-label${alertKeys.has('ta_sistolica') || alertKeys.has('ta_diastolica') ? ' vital-label-alert' : ''}`}>
+              T/A{' '}
+              <span style={{ fontWeight: 400, textTransform: 'none' }}>(mmHg)</span>
+              {(alertKeys.has('ta_sistolica') || alertKeys.has('ta_diastolica')) && (
+                <span className="vital-alert-icon"> ⚠</span>
+              )}
+            </div>
             <div className="vital-input-row">
               <input
-                className="input"
+                className={`input${alertKeys.has('ta_sistolica') ? ' input-alert' : ''}`}
                 type="number"
                 name="ta_sistolica"
                 value={form.signosVitales.ta_sistolica}
@@ -496,7 +593,7 @@ export default function ReporteForm() {
               />
               <span className="sep">/</span>
               <input
-                className="input"
+                className={`input${alertKeys.has('ta_diastolica') ? ' input-alert' : ''}`}
                 type="number"
                 name="ta_diastolica"
                 value={form.signosVitales.ta_diastolica}
@@ -510,11 +607,21 @@ export default function ReporteForm() {
             </div>
           </div>
 
-          <VitalInput label="FC"   unit="lpm" name="fc"          value={form.signosVitales.fc}          onChange={handleVital} placeholder="72"   min="20"  max="250" />
-          <VitalInput label="SpO₂" unit="%"   name="spo2"        value={form.signosVitales.spo2}        onChange={handleVital} placeholder="98"   min="50"  max="100" />
-          <VitalInput label="FR"   unit="rpm" name="fr"          value={form.signosVitales.fr}          onChange={handleVital} placeholder="16"   min="6"   max="60"  />
-          <VitalInput label="Temp" unit="°C"  name="temperatura" value={form.signosVitales.temperatura} onChange={handleVital} placeholder="36.5" min="32"  max="42"  />
+          <VitalInput label="FC"   unit="lpm" name="fc"          value={form.signosVitales.fc}          onChange={handleVital} placeholder="72"   min="20"  max="250" hasAlert={alertKeys.has('fc')}          />
+          <VitalInput label="SpO₂" unit="%"   name="spo2"        value={form.signosVitales.spo2}        onChange={handleVital} placeholder="98"   min="50"  max="100" hasAlert={alertKeys.has('spo2')}        />
+          <VitalInput label="FR"   unit="rpm" name="fr"          value={form.signosVitales.fr}          onChange={handleVital} placeholder="16"   min="6"   max="60"  hasAlert={alertKeys.has('fr')}          />
+          <VitalInput label="Temp" unit="°C"  name="temperatura" value={form.signosVitales.temperatura} onChange={handleVital} placeholder="36.5" min="32"  max="42"  hasAlert={alertKeys.has('temperatura')} />
         </div>
+
+        {/* Inline warning — visible mientras se llena el formulario */}
+        {vitalAlerts.length > 0 && (
+          <div className="vital-inline-warning" role="alert">
+            <span className="vital-inline-icon">⚠</span>
+            <span>
+              {vitalAlerts.map(a => `${a.label} (${a.tag})`).join(' · ')}
+            </span>
+          </div>
+        )}
       </SectionCard>
 
       {/* ── RESPONSABLE ── */}
@@ -588,6 +695,15 @@ export default function ReporteForm() {
           residenteId={selectedRes?.id}
           notasAdicionales={form.notasAdicionales}
           onClose={() => setShowSheet(false)}
+        />
+      )}
+
+      {/* ── VITAL ALERT CONFIRMATION ── */}
+      {showVitalConfirm && (
+        <VitalAlertModal
+          alerts={vitalAlerts}
+          onConfirm={doGenerate}
+          onCancel={() => setShowVitalConfirm(false)}
         />
       )}
     </>

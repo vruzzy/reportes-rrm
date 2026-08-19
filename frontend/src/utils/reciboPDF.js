@@ -262,7 +262,7 @@ export async function generarReciboPDF(datos) {
     ? 'PAGO DE CENTRO DE DÍA CORRESPONDIENTE'
     : concepto && concepto !== 'hospedaje'
       ? `PAGO DE ${concepto.toUpperCase()} CORRESPONDIENTE`
-      : 'PAGO DE HOSPEDAJE CORRESPONDIENTE'
+      : 'PAGO DE RESIDENCIA PERMANENTE CORRESPONDIENTE'
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(11)
   const tituloY = mostrarPeriodo === false ? BOX_Y + BOX_H / 2 + 2 : BOX_Y + 11

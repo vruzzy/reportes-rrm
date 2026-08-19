@@ -87,7 +87,8 @@ function CalendarioView({ onGenerar }) {
   // Generar items para el calendario
   const items = []
   residentes.forEach(res => {
-    if (res.frecuencia === 'semanal') {
+    const esCentroDia = res.tipo_servicio === 'centro_dia'
+    if (!esCentroDia && res.frecuencia === 'semanal') {
       const semanas = getSemanasDelMes(year, month, res.dia_pago || 1)
       semanas.forEach(({ desde, hasta }) => {
         const recibo = recibos.find(r => r.residente_id === res.id && r.periodo_de === desde)
@@ -99,7 +100,7 @@ function CalendarioView({ onGenerar }) {
       })
     } else {
       const recibo = recibos.find(r => r.residente_id === res.id)
-      items.push({ res, recibo, pagado: Boolean(recibo), tipo: 'mensual' })
+      items.push({ res, recibo, pagado: Boolean(recibo), tipo: esCentroDia ? 'centro_dia' : 'mensual' })
     }
   })
 
@@ -108,8 +109,13 @@ function CalendarioView({ onGenerar }) {
     return (a.res.dia_pago || 1) - (b.res.dia_pago || 1)
   })
 
-  const pendientes = items.filter(i => !i.pagado)
-  const pagados    = items.filter(i => i.pagado)
+  const residenciaItems = items.filter(i => i.res.tipo_servicio !== 'centro_dia')
+  const centroDiaItems  = items.filter(i => i.res.tipo_servicio === 'centro_dia')
+
+  const pendientesRes = residenciaItems.filter(i => !i.pagado)
+  const pagadosRes    = residenciaItems.filter(i => i.pagado)
+  const pendientesCD  = centroDiaItems.filter(i => !i.pagado)
+  const pagadosCD     = centroDiaItems.filter(i => i.pagado)
 
   return (
     <>
@@ -131,49 +137,87 @@ function CalendarioView({ onGenerar }) {
         </div>
       ) : (
         <>
-          {/* PENDIENTES */}
-          {pendientes.length > 0 && (
-            <div style={{ padding: '12px 16px 0' }}>
-              <div style={sectionTitle('#e65c00')}>
-                Pendientes · {pendientes.length}
-              </div>
-              {pendientes.map((item, i) => (
-                <ResidenteRow
-                  key={`${item.res.id}-${item.desde || 'mensual'}-${i}`}
-                  res={item.res}
-                  pagado={false}
-                  semanaLabel={item.label}
-                  onGenerar={() => onGenerar(item.res, year, month, item.desde, item.hasta)}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* PAGADOS */}
-          {pagados.length > 0 && (
-            <div style={{ padding: '12px 16px 0' }}>
-              <div style={sectionTitle('#2e7d32')}>
-                Pagados · {pagados.length}
-              </div>
-              {pagados.map((item, i) => (
-                <ResidenteRow
-                  key={`${item.res.id}-${item.desde || 'mensual'}-paid-${i}`}
-                  res={item.res}
-                  pagado
-                  recibo={item.recibo}
-                  semanaLabel={item.label}
-                  deleting={deletingId === item.recibo?.id}
-                  onEliminar={() => handleEliminar(item.recibo.id)}
-                />
-              ))}
-            </div>
-          )}
-
           {residentes.length === 0 && (
             <div className="empty-state">
               <div className="empty-state-icon">📋</div>
               <h3>Sin residentes</h3>
               <p>Agrégalos en la pestaña "Residentes"</p>
+            </div>
+          )}
+
+          {/* ── RESIDENCIA PERMANENTE ── */}
+          {residenciaItems.length > 0 && (
+            <div style={{ padding: '12px 16px 0' }}>
+              <div style={{ ...sectionTitle('var(--primary)'), marginBottom: 10 }}>
+                🏠 Residencia Permanente
+              </div>
+              {pendientesRes.length > 0 && (
+                <>
+                  <div style={sectionTitle('#e65c00')}>Pendientes · {pendientesRes.length}</div>
+                  {pendientesRes.map((item, i) => (
+                    <ResidenteRow
+                      key={`res-pend-${item.res.id}-${item.desde || 'mensual'}-${i}`}
+                      res={item.res}
+                      pagado={false}
+                      semanaLabel={item.label}
+                      onGenerar={() => onGenerar(item.res, year, month, item.desde, item.hasta)}
+                    />
+                  ))}
+                </>
+              )}
+              {pagadosRes.length > 0 && (
+                <>
+                  <div style={sectionTitle('#2e7d32')}>Pagados · {pagadosRes.length}</div>
+                  {pagadosRes.map((item, i) => (
+                    <ResidenteRow
+                      key={`res-paid-${item.res.id}-${item.desde || 'mensual'}-${i}`}
+                      res={item.res}
+                      pagado
+                      recibo={item.recibo}
+                      semanaLabel={item.label}
+                      deleting={deletingId === item.recibo?.id}
+                      onEliminar={() => handleEliminar(item.recibo.id)}
+                    />
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── CENTRO DE DÍA ── */}
+          {centroDiaItems.length > 0 && (
+            <div style={{ padding: '12px 16px 0' }}>
+              <div style={{ ...sectionTitle('#1565c0'), marginBottom: 10 }}>
+                ☀️ Centro de Día
+              </div>
+              {pendientesCD.length > 0 && (
+                <>
+                  <div style={sectionTitle('#e65c00')}>Pendientes · {pendientesCD.length}</div>
+                  {pendientesCD.map((item, i) => (
+                    <ResidenteRow
+                      key={`cd-pend-${item.res.id}-${i}`}
+                      res={item.res}
+                      pagado={false}
+                      onGenerar={() => onGenerar(item.res, year, month, null, null)}
+                    />
+                  ))}
+                </>
+              )}
+              {pagadosCD.length > 0 && (
+                <>
+                  <div style={sectionTitle('#2e7d32')}>Pagados · {pagadosCD.length}</div>
+                  {pagadosCD.map((item, i) => (
+                    <ResidenteRow
+                      key={`cd-paid-${item.res.id}-${i}`}
+                      res={item.res}
+                      pagado
+                      recibo={item.recibo}
+                      deleting={deletingId === item.recibo?.id}
+                      onEliminar={() => handleEliminar(item.recibo.id)}
+                    />
+                  ))}
+                </>
+              )}
             </div>
           )}
         </>
@@ -282,7 +326,7 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
     valor:         residente.mensualidad ? String(residente.mensualidad) : '',
     forma_pago:    'efectivo',
     observaciones: `Mensualidad ${residente.nombre.trim().split(/\s+/)[0]}`,
-    concepto:      esSemanal ? 'centro_dia' : 'hospedaje',
+    concepto:      residente.tipo_servicio === 'centro_dia' ? 'centro_dia' : 'hospedaje',
     conceptoOtro:  '',
     mostrarPeriodo: true,
   })

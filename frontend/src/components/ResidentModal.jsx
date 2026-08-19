@@ -11,14 +11,15 @@ export default function ResidentModal({ residente, onSave, onClose }) {
   const editing = Boolean(residente)
 
   const [form, setForm] = useState({
-    nombre:        residente?.nombre        || '',
-    iniciales:     residente?.iniciales     || '',
-    fecha_ingreso: residente?.fecha_ingreso || new Date().toISOString().slice(0,10),
-    ciudad:        residente?.ciudad        || 'Mérida, Yucatán',
-    mensualidad:   residente?.mensualidad   != null ? String(residente.mensualidad) : '',
-    familiar:      residente?.familiar      || '',
-    frecuencia:    residente?.frecuencia    || 'mensual',
-    dia_pago:      residente?.dia_pago      != null ? String(residente.dia_pago) : '1',
+    nombre:        residente?.nombre         || '',
+    iniciales:     residente?.iniciales      || '',
+    fecha_ingreso: residente?.fecha_ingreso  || new Date().toISOString().slice(0,10),
+    ciudad:        residente?.ciudad         || 'Mérida, Yucatán',
+    mensualidad:   residente?.mensualidad    != null ? String(residente.mensualidad) : '',
+    familiar:      residente?.familiar       || '',
+    frecuencia:    residente?.frecuencia     || 'mensual',
+    dia_pago:      residente?.dia_pago       != null ? String(residente.dia_pago) : '1',
+    tipo_servicio: residente?.tipo_servicio  || 'residencia_permanente',
   })
 
   const [autoInitials, setAutoInitials] = useState(!editing)
@@ -60,13 +61,14 @@ export default function ResidentModal({ residente, onSave, onClose }) {
     try {
       await onSave({
         ...form,
-        nombre:      form.nombre.trim(),
-        iniciales:   form.iniciales.trim().toUpperCase(),
-        ciudad:      form.ciudad.trim() || 'Mérida, Yucatán',
-        mensualidad: parseFloat(form.mensualidad) || 0,
-        familiar:    form.familiar.trim(),
-        frecuencia:  form.frecuencia,
-        dia_pago:    form.frecuencia === 'semanal'
+        nombre:        form.nombre.trim(),
+        iniciales:     form.iniciales.trim().toUpperCase(),
+        ciudad:        form.ciudad.trim() || 'Mérida, Yucatán',
+        mensualidad:   parseFloat(form.mensualidad) || 0,
+        familiar:      form.familiar.trim(),
+        tipo_servicio: form.tipo_servicio,
+        frecuencia:    form.tipo_servicio === 'centro_dia' ? 'mensual' : form.frecuencia,
+        dia_pago:      form.frecuencia === 'semanal' && form.tipo_servicio !== 'centro_dia'
           ? Math.min(7,  Math.max(1, parseInt(form.dia_pago) || 1))
           : Math.min(31, Math.max(1, parseInt(form.dia_pago) || 1)),
       })
@@ -136,24 +138,40 @@ export default function ResidentModal({ residente, onSave, onClose }) {
               <span className="input-hint">Aparece en el campo "Recibí" del recibo</span>
             </div>
 
-            {/* Frecuencia de pago */}
+            {/* Tipo de servicio */}
             <div className="field-group">
-              <label>Frecuencia de pago</label>
+              <label>Tipo de servicio</label>
               <div className="turn-toggle" style={{ marginTop: 6 }}>
-                {[['mensual','Mensual'],['semanal','Semanal']].map(([v,l]) => (
+                {[['residencia_permanente','Residencia Permanente'],['centro_dia','Centro de Día']].map(([v,l]) => (
                   <button key={v} type="button"
-                    className={`turn-btn${form.frecuencia === v ? ' active' : ''}`}
-                    onClick={() => setForm(f => ({ ...f, frecuencia: v, dia_pago: v === 'semanal' ? '1' : f.dia_pago }))}>
+                    className={`turn-btn${form.tipo_servicio === v ? ' active' : ''}`}
+                    onClick={() => setForm(f => ({ ...f, tipo_servicio: v, frecuencia: v === 'centro_dia' ? 'mensual' : f.frecuencia }))}>
                     {l}
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* Frecuencia de pago — solo para Residencia Permanente */}
+            {form.tipo_servicio !== 'centro_dia' && (
+              <div className="field-group">
+                <label>Frecuencia de pago</label>
+                <div className="turn-toggle" style={{ marginTop: 6 }}>
+                  {[['mensual','Mensual'],['semanal','Semanal']].map(([v,l]) => (
+                    <button key={v} type="button"
+                      className={`turn-btn${form.frecuencia === v ? ' active' : ''}`}
+                      onClick={() => setForm(f => ({ ...f, frecuencia: v, dia_pago: v === 'semanal' ? '1' : f.dia_pago }))}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Día de pago */}
             <div className="field-row">
               <div className="field-group" style={{ flex: 1 }}>
-                {form.frecuencia === 'semanal' ? (
+                {form.tipo_servicio !== 'centro_dia' && form.frecuencia === 'semanal' ? (
                   <>
                     <label htmlFor="dia_pago">Día de cobro</label>
                     <select

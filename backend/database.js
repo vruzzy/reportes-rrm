@@ -64,5 +64,6 @@ try { db.exec(`ALTER TABLE residentes ADD COLUMN ciudad TEXT DEFAULT 'Mérida, Y
 try { db.exec(`ALTER TABLE residentes ADD COLUMN familiar TEXT DEFAULT ''`) } catch {}
 try { db.exec(`ALTER TABLE residentes ADD COLUMN dia_pago INTEGER DEFAULT 1`) } catch {}
 try { db.exec(`ALTER TABLE residentes ADD COLUMN frecuencia TEXT DEFAULT 'mensual'`) } catch {}
+try { db.exec(`ALTER TABLE residentes ADD COLUMN tipo_servicio TEXT DEFAULT 'residencia_permanente'`) } catch {}
 
 module.exports = db;
