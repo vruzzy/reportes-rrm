@@ -18,6 +18,7 @@ export default function App() {
         <button
           className={`nav-tab${activeTab === 'recibos' ? ' active' : ''}`}
           onClick={() => setActiveTab('recibos')}
+          aria-label="Recibos"
         >
           <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="2" y="5" width="20" height="14" rx="2"/>
@@ -29,6 +30,7 @@ export default function App() {
         <button
           className={`nav-tab${activeTab === 'reporte' ? ' active' : ''}`}
           onClick={() => setActiveTab('reporte')}
+          aria-label="Reportes"
         >
           <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
@@ -42,6 +44,7 @@ export default function App() {
         <button
           className={`nav-tab${activeTab === 'residentes' ? ' active' : ''}`}
           onClick={() => setActiveTab('residentes')}
+          aria-label="Residentes"
         >
           <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
