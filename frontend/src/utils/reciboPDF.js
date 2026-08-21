@@ -114,7 +114,7 @@ export function cantidadEnLetras(monto) {
 // ── Generación del PDF ────────────────────────────────────────────────────────
 
 export async function generarReciboPDF(datos) {
-  const { numero, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones, concepto, mostrarPeriodo } = datos
+  const { numero, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones, concepto, mostrarPeriodo, dias_asistencia, horario_horas } = datos
 
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
@@ -258,17 +258,39 @@ export async function generarReciboPDF(datos) {
   const desdeStr = `${String(dd1).padStart(2,'0')} DE ${MESES[dm1-1]}`
   const hastaStr = `${String(dd2).padStart(2,'0')} DE ${MESES[dm2-1]} DE ${dy2}`
 
-  const tituloPago = concepto === 'centro_dia'
+  const esCentroDia = concepto === 'centro_dia'
+  const tituloPago  = esCentroDia
     ? 'PAGO DE CENTRO DE DÍA CORRESPONDIENTE'
     : concepto && concepto !== 'hospedaje'
       ? `PAGO DE ${concepto.toUpperCase()} CORRESPONDIENTE`
       : 'PAGO DE RESIDENCIA PERMANENTE CORRESPONDIENTE'
+
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(11)
-  const tituloY = mostrarPeriodo === false ? BOX_Y + BOX_H / 2 + 2 : BOX_Y + 11
-  pdf.text(tituloPago, PW / 2, tituloY, { align: 'center' })
-  if (mostrarPeriodo !== false) {
-    pdf.text(`DEL ${desdeStr} AL ${hastaStr}.`, PW / 2, BOX_Y + 20, { align: 'center' })
+
+  if (esCentroDia && (dias_asistencia || horario_horas)) {
+    // 3 líneas: título + detalles + período
+    pdf.text(tituloPago, PW / 2, BOX_Y + 9, { align: 'center' })
+
+    const detalles = [
+      horario_horas   ? `HORARIO: ${horario_horas} HRS. DIARIAS` : null,
+      dias_asistencia ? `${dias_asistencia} DÍAS POR SEMANA`      : null,
+    ].filter(Boolean).join('  —  ')
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(9)
+    pdf.text(detalles, PW / 2, BOX_Y + 17, { align: 'center' })
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(11)
+
+    if (mostrarPeriodo !== false) {
+      pdf.text(`DEL ${desdeStr} AL ${hastaStr}.`, PW / 2, BOX_Y + 25, { align: 'center' })
+    }
+  } else {
+    const tituloY = mostrarPeriodo === false ? BOX_Y + BOX_H / 2 + 2 : BOX_Y + 11
+    pdf.text(tituloPago, PW / 2, tituloY, { align: 'center' })
+    if (mostrarPeriodo !== false) {
+      pdf.text(`DEL ${desdeStr} AL ${hastaStr}.`, PW / 2, BOX_Y + 20, { align: 'center' })
+    }
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

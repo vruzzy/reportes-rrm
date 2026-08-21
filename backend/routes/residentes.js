@@ -17,8 +17,10 @@ function sanitizar(body) {
   const ciudad        = (body.ciudad        || 'Mérida, Yucatán').trim();
   const mensualidad   = parseFloat(body.mensualidad) || 0;
   const familiar      = (body.familiar      || '').trim();
-  const tipo_servicio = body.tipo_servicio === 'centro_dia' ? 'centro_dia' : 'residencia_permanente';
-  const frecuencia    = body.frecuencia === 'semanal' ? 'semanal' : 'mensual';
+  const tipo_servicio   = body.tipo_servicio === 'centro_dia' ? 'centro_dia' : 'residencia_permanente';
+  const frecuencia      = body.frecuencia === 'semanal' ? 'semanal' : 'mensual';
+  const dias_asistencia = Math.min(7, Math.max(1, parseInt(body.dias_asistencia) || 5));
+  const horario_horas   = [8, 10, 12].includes(parseInt(body.horario_horas)) ? parseInt(body.horario_horas) : 8;
   const dia_pago      = frecuencia === 'semanal'
     ? Math.min(7,  Math.max(1, parseInt(body.dia_pago) || 1))
     : Math.min(31, Math.max(1, parseInt(body.dia_pago) || 1));
@@ -30,7 +32,7 @@ function sanitizar(body) {
   if (!iniciales)     throw new Error('No se pudieron generar las iniciales.');
   if (!fecha_ingreso) throw new Error('La fecha de ingreso es obligatoria.');
 
-  return { nombre, iniciales, fecha_ingreso, ciudad, mensualidad, familiar, dia_pago, frecuencia, tipo_servicio };
+  return { nombre, iniciales, fecha_ingreso, ciudad, mensualidad, familiar, dia_pago, frecuencia, tipo_servicio, dias_asistencia, horario_horas };
 }
 
 // GET /api/residentes
@@ -54,8 +56,8 @@ router.post('/', (req, res) => {
 
   try {
     const result = db.prepare(
-      'INSERT INTO residentes (nombre, iniciales, habitacion, fecha_ingreso, ciudad, mensualidad, familiar, dia_pago, frecuencia, tipo_servicio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run([campos.nombre, campos.iniciales, '', campos.fecha_ingreso, campos.ciudad, campos.mensualidad, campos.familiar, campos.dia_pago, campos.frecuencia, campos.tipo_servicio]);
+      'INSERT INTO residentes (nombre, iniciales, habitacion, fecha_ingreso, ciudad, mensualidad, familiar, dia_pago, frecuencia, tipo_servicio, dias_asistencia, horario_horas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run([campos.nombre, campos.iniciales, '', campos.fecha_ingreso, campos.ciudad, campos.mensualidad, campos.familiar, campos.dia_pago, campos.frecuencia, campos.tipo_servicio, campos.dias_asistencia, campos.horario_horas]);
 
     const id = Number(result.lastInsertRowid);
     const nuevo = db.prepare('SELECT * FROM residentes WHERE id = ?').get([id]);
@@ -78,8 +80,8 @@ router.put('/:id', (req, res) => {
 
   try {
     db.prepare(
-      'UPDATE residentes SET nombre=?, iniciales=?, fecha_ingreso=?, ciudad=?, mensualidad=?, familiar=?, dia_pago=?, frecuencia=?, tipo_servicio=? WHERE id=?'
-    ).run([campos.nombre, campos.iniciales, campos.fecha_ingreso, campos.ciudad, campos.mensualidad, campos.familiar, campos.dia_pago, campos.frecuencia, campos.tipo_servicio, Number(id)]);
+      'UPDATE residentes SET nombre=?, iniciales=?, fecha_ingreso=?, ciudad=?, mensualidad=?, familiar=?, dia_pago=?, frecuencia=?, tipo_servicio=?, dias_asistencia=?, horario_horas=? WHERE id=?'
+    ).run([campos.nombre, campos.iniciales, campos.fecha_ingreso, campos.ciudad, campos.mensualidad, campos.familiar, campos.dia_pago, campos.frecuencia, campos.tipo_servicio, campos.dias_asistencia, campos.horario_horas, Number(id)]);
 
     const updated = db.prepare('SELECT * FROM residentes WHERE id = ?').get([id]);
     if (!updated) return res.status(404).json({ error: 'Residente no encontrado' });

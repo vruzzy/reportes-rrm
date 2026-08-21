@@ -41,7 +41,7 @@ router.get('/proximo-numero', (req, res) => {
 
 // POST /api/recibos — crear nuevo recibo
 router.post('/', (req, res) => {
-  const { numero, residente_id, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones } = req.body;
+  const { numero, residente_id, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones, dias_asistencia, horario_horas } = req.body;
 
   if (!nombre?.trim()) return res.status(400).json({ error: 'El nombre es obligatorio.' });
   if (!fecha)          return res.status(400).json({ error: 'La fecha es obligatoria.' });
@@ -49,8 +49,8 @@ router.post('/', (req, res) => {
 
   try {
     const result = db.prepare(`
-      INSERT INTO recibos (numero, residente_id, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO recibos (numero, residente_id, nombre, ciudad, fecha, periodo_de, periodo_hasta, valor, forma_pago, observaciones, dias_asistencia, horario_horas)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run([
       numero,
       residente_id || null,
@@ -62,6 +62,8 @@ router.post('/', (req, res) => {
       parseFloat(valor),
       forma_pago || 'efectivo',
       observaciones || '',
+      dias_asistencia ? parseInt(dias_asistencia) : null,
+      horario_horas   ? parseInt(horario_horas)   : null,
     ]);
     const nuevo = db.prepare('SELECT * FROM recibos WHERE id = ?').get([Number(result.lastInsertRowid)]);
     res.status(201).json(nuevo);

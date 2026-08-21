@@ -65,5 +65,9 @@ try { db.exec(`ALTER TABLE residentes ADD COLUMN familiar TEXT DEFAULT ''`) } ca
 try { db.exec(`ALTER TABLE residentes ADD COLUMN dia_pago INTEGER DEFAULT 1`) } catch {}
 try { db.exec(`ALTER TABLE residentes ADD COLUMN frecuencia TEXT DEFAULT 'mensual'`) } catch {}
 try { db.exec(`ALTER TABLE residentes ADD COLUMN tipo_servicio TEXT DEFAULT 'residencia_permanente'`) } catch {}
+try { db.exec(`ALTER TABLE residentes ADD COLUMN dias_asistencia INTEGER DEFAULT 5`) } catch {}
+try { db.exec(`ALTER TABLE residentes ADD COLUMN horario_horas INTEGER DEFAULT 8`) } catch {}
+try { db.exec(`ALTER TABLE recibos ADD COLUMN dias_asistencia INTEGER`) } catch {}
+try { db.exec(`ALTER TABLE recibos ADD COLUMN horario_horas INTEGER`) } catch {}
 
 module.exports = db;

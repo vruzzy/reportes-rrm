@@ -11,15 +11,17 @@ export default function ResidentModal({ residente, onSave, onClose }) {
   const editing = Boolean(residente)
 
   const [form, setForm] = useState({
-    nombre:        residente?.nombre         || '',
-    iniciales:     residente?.iniciales      || '',
-    fecha_ingreso: residente?.fecha_ingreso  || new Date().toISOString().slice(0,10),
-    ciudad:        residente?.ciudad         || 'Mérida, Yucatán',
-    mensualidad:   residente?.mensualidad    != null ? String(residente.mensualidad) : '',
-    familiar:      residente?.familiar       || '',
-    frecuencia:    residente?.frecuencia     || 'mensual',
-    dia_pago:      residente?.dia_pago       != null ? String(residente.dia_pago) : '1',
-    tipo_servicio: residente?.tipo_servicio  || 'residencia_permanente',
+    nombre:          residente?.nombre          || '',
+    iniciales:       residente?.iniciales       || '',
+    fecha_ingreso:   residente?.fecha_ingreso   || new Date().toISOString().slice(0,10),
+    ciudad:          residente?.ciudad          || 'Mérida, Yucatán',
+    mensualidad:     residente?.mensualidad     != null ? String(residente.mensualidad) : '',
+    familiar:        residente?.familiar        || '',
+    frecuencia:      residente?.frecuencia      || 'mensual',
+    dia_pago:        residente?.dia_pago        != null ? String(residente.dia_pago) : '1',
+    tipo_servicio:   residente?.tipo_servicio   || 'residencia_permanente',
+    dias_asistencia: residente?.dias_asistencia != null ? String(residente.dias_asistencia) : '5',
+    horario_horas:   residente?.horario_horas   != null ? String(residente.horario_horas)   : '8',
   })
 
   const [autoInitials, setAutoInitials] = useState(!editing)
@@ -61,16 +63,18 @@ export default function ResidentModal({ residente, onSave, onClose }) {
     try {
       await onSave({
         ...form,
-        nombre:        form.nombre.trim(),
-        iniciales:     form.iniciales.trim().toUpperCase(),
-        ciudad:        form.ciudad.trim() || 'Mérida, Yucatán',
-        mensualidad:   parseFloat(form.mensualidad) || 0,
-        familiar:      form.familiar.trim(),
-        tipo_servicio: form.tipo_servicio,
-        frecuencia:    form.tipo_servicio === 'centro_dia' ? 'mensual' : form.frecuencia,
-        dia_pago:      form.frecuencia === 'semanal' && form.tipo_servicio !== 'centro_dia'
+        nombre:          form.nombre.trim(),
+        iniciales:       form.iniciales.trim().toUpperCase(),
+        ciudad:          form.ciudad.trim() || 'Mérida, Yucatán',
+        mensualidad:     parseFloat(form.mensualidad) || 0,
+        familiar:        form.familiar.trim(),
+        tipo_servicio:   form.tipo_servicio,
+        frecuencia:      form.tipo_servicio === 'centro_dia' ? 'mensual' : form.frecuencia,
+        dia_pago:        form.frecuencia === 'semanal' && form.tipo_servicio !== 'centro_dia'
           ? Math.min(7,  Math.max(1, parseInt(form.dia_pago) || 1))
           : Math.min(31, Math.max(1, parseInt(form.dia_pago) || 1)),
+        dias_asistencia: form.tipo_servicio === 'centro_dia' ? (parseInt(form.dias_asistencia) || 5) : null,
+        horario_horas:   form.tipo_servicio === 'centro_dia' ? (parseInt(form.horario_horas)   || 8) : null,
       })
     } catch (err) {
       setError(err.message || 'Error al guardar. Intenta de nuevo.')
@@ -168,45 +172,65 @@ export default function ResidentModal({ residente, onSave, onClose }) {
               </div>
             )}
 
-            {/* Día de pago */}
-            <div className="field-row">
-              <div className="field-group" style={{ flex: 1 }}>
-                {form.tipo_servicio !== 'centro_dia' && form.frecuencia === 'semanal' ? (
-                  <>
-                    <label htmlFor="dia_pago">Día de cobro</label>
-                    <select
-                      id="dia_pago"
-                      className="input"
-                      value={form.dia_pago}
-                      onChange={handleChange('dia_pago')}
-                      style={{ fontWeight: 600 }}
-                    >
-                      {['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map((d,i) => (
-                        <option key={i+1} value={i+1}>{d}</option>
-                      ))}
-                    </select>
-                    <span className="input-hint">Día de inicio de la semana</span>
-                  </>
-                ) : (
-                  <>
-                    <label htmlFor="dia_pago">Día de pago</label>
-                    <input
-                      id="dia_pago"
-                      className="input"
-                      type="number"
-                      min="1"
-                      max="31"
-                      value={form.dia_pago}
-                      onChange={handleChange('dia_pago')}
-                      inputMode="numeric"
-                      style={{ textAlign: 'center', fontWeight: 700, fontSize: 18 }}
-                    />
-                    <span className="input-hint">Del 1 al 31</span>
-                  </>
-                )}
+            {/* Día de pago — solo Residencia Permanente */}
+            {form.tipo_servicio !== 'centro_dia' && (
+              <div className="field-row">
+                <div className="field-group" style={{ flex: 1 }}>
+                  {form.frecuencia === 'semanal' ? (
+                    <>
+                      <label htmlFor="dia_pago">Día de cobro</label>
+                      <select
+                        id="dia_pago"
+                        className="input"
+                        value={form.dia_pago}
+                        onChange={handleChange('dia_pago')}
+                        style={{ fontWeight: 600 }}
+                      >
+                        {['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map((d,i) => (
+                          <option key={i+1} value={i+1}>{d}</option>
+                        ))}
+                      </select>
+                      <span className="input-hint">Día de inicio de la semana</span>
+                    </>
+                  ) : (
+                    <>
+                      <label htmlFor="dia_pago">Día de pago</label>
+                      <input
+                        id="dia_pago"
+                        className="input"
+                        type="number"
+                        min="1"
+                        max="31"
+                        value={form.dia_pago}
+                        onChange={handleChange('dia_pago')}
+                        inputMode="numeric"
+                        style={{ textAlign: 'center', fontWeight: 700, fontSize: 18 }}
+                      />
+                      <span className="input-hint">Del 1 al 31</span>
+                    </>
+                  )}
+                </div>
+                <div className="field-group" style={{ flex: 2 }}>
+                  <label htmlFor="mensualidad">Tarifa mensual ($)</label>
+                  <input
+                    id="mensualidad"
+                    className="input"
+                    type="number"
+                    placeholder="0"
+                    min="0"
+                    step="any"
+                    value={form.mensualidad}
+                    onChange={handleChange('mensualidad')}
+                    inputMode="numeric"
+                  />
+                </div>
               </div>
-              <div className="field-group" style={{ flex: 2 }}>
-                <label htmlFor="mensualidad">Mensualidad ($)</label>
+            )}
+
+            {/* Tarifa mensual — solo Centro de Día */}
+            {form.tipo_servicio === 'centro_dia' && (
+              <div className="field-group">
+                <label htmlFor="mensualidad">Tarifa mensual ($)</label>
                 <input
                   id="mensualidad"
                   className="input"
@@ -219,7 +243,41 @@ export default function ResidentModal({ residente, onSave, onClose }) {
                   inputMode="numeric"
                 />
               </div>
-            </div>
+            )}
+
+            {/* Campos exclusivos de Centro de Día */}
+            {form.tipo_servicio === 'centro_dia' && (
+              <>
+                <div className="field-group">
+                  <label htmlFor="dias_asistencia">Días que asiste por semana</label>
+                  <input
+                    id="dias_asistencia"
+                    className="input"
+                    type="number"
+                    min="1"
+                    max="7"
+                    value={form.dias_asistencia}
+                    onChange={handleChange('dias_asistencia')}
+                    inputMode="numeric"
+                    style={{ textAlign: 'center', fontWeight: 700, fontSize: 18 }}
+                  />
+                  <span className="input-hint">Del 1 al 7</span>
+                </div>
+
+                <div className="field-group">
+                  <label>Horario diario</label>
+                  <div className="turn-toggle" style={{ marginTop: 6 }}>
+                    {[['8','8 horas'],['10','10 horas'],['12','12 horas']].map(([v,l]) => (
+                      <button key={v} type="button"
+                        className={`turn-btn${form.horario_horas === v ? ' active' : ''}`}
+                        onClick={() => setForm(f => ({ ...f, horario_horas: v }))}>
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="field-group">
               <label htmlFor="ciudad">Ciudad</label>
