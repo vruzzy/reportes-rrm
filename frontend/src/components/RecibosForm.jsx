@@ -30,12 +30,13 @@ function fechaConDia(year, month, dia) {
 
 function CalendarioView({ onGenerar }) {
   const hoy      = new Date()
-  const [year, setYear]   = useState(hoy.getFullYear())
-  const [month, setMonth] = useState(hoy.getMonth() + 1)
+  const [year, setYear]       = useState(hoy.getFullYear())
+  const [month, setMonth]     = useState(hoy.getMonth() + 1)
   const [residentes, setResidentes] = useState([])
   const [recibos,    setRecibos]    = useState([])
   const [loading,    setLoading]    = useState(true)
   const [deletingId, setDeletingId] = useState(null)
+  const [vistaActiva, setVistaActiva] = useState('residencia_permanente')
 
   const mesStr = mesISO(year, month)
 
@@ -117,6 +118,10 @@ function CalendarioView({ onGenerar }) {
   const pendientesCD  = centroDiaItems.filter(i => !i.pagado)
   const pagadosCD     = centroDiaItems.filter(i => i.pagado)
 
+  const esRes              = vistaActiva === 'residencia_permanente'
+  const pendientesActivos  = esRes ? pendientesRes : pendientesCD
+  const pagadosActivos     = esRes ? pagadosRes    : pagadosCD
+
   return (
     <>
       {/* Navegador de mes */}
@@ -129,6 +134,46 @@ function CalendarioView({ onGenerar }) {
           {MESES_NOMBRE[month-1]} {year}
         </span>
         <button onClick={nextMes} style={navBtnStyle}>›</button>
+      </div>
+
+      {/* Toggle tipo de vista */}
+      <div style={{ padding: '12px 16px 4px' }}>
+        <div className="turn-toggle">
+          <button
+            type="button"
+            className={`turn-btn${esRes ? ' active' : ''}`}
+            onClick={() => setVistaActiva('residencia_permanente')}
+          >
+            🏠 Estancia Permanente
+            {pendientesRes.length > 0 && (
+              <span style={{
+                marginLeft: 6,
+                background: esRes ? 'rgba(255,255,255,0.35)' : 'var(--primary)',
+                color: 'white', borderRadius: 999,
+                fontSize: 11, fontWeight: 700, padding: '1px 7px',
+              }}>
+                {pendientesRes.length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={`turn-btn${!esRes ? ' active' : ''}`}
+            onClick={() => setVistaActiva('centro_dia')}
+          >
+            ☀️ Centro de Día
+            {pendientesCD.length > 0 && (
+              <span style={{
+                marginLeft: 6,
+                background: !esRes ? 'rgba(255,255,255,0.35)' : 'var(--primary)',
+                color: 'white', borderRadius: 999,
+                fontSize: 11, fontWeight: 700, padding: '1px 7px',
+              }}>
+                {pendientesCD.length}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -145,81 +190,46 @@ function CalendarioView({ onGenerar }) {
             </div>
           )}
 
-          {/* ── RESIDENCIA PERMANENTE ── */}
-          {residenciaItems.length > 0 && (
-            <div style={{ padding: '12px 16px 0' }}>
-              <div style={{ ...sectionTitle('var(--primary)'), marginBottom: 10 }}>
-                🏠 Residencia Permanente
+          {/* Lista de la vista activa */}
+          <div style={{ padding: '8px 16px 0' }}>
+            {pendientesActivos.length === 0 && pagadosActivos.length === 0 && residentes.length > 0 && (
+              <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14, padding: '32px 0' }}>
+                No hay residentes de este tipo registrados.
               </div>
-              {pendientesRes.length > 0 && (
-                <>
-                  <div style={sectionTitle('#e65c00')}>Pendientes · {pendientesRes.length}</div>
-                  {pendientesRes.map((item, i) => (
-                    <ResidenteRow
-                      key={`res-pend-${item.res.id}-${item.desde || 'mensual'}-${i}`}
-                      res={item.res}
-                      pagado={false}
-                      semanaLabel={item.label}
-                      onGenerar={() => onGenerar(item.res, year, month, item.desde, item.hasta)}
-                    />
-                  ))}
-                </>
-              )}
-              {pagadosRes.length > 0 && (
-                <>
-                  <div style={sectionTitle('#2e7d32')}>Pagados · {pagadosRes.length}</div>
-                  {pagadosRes.map((item, i) => (
-                    <ResidenteRow
-                      key={`res-paid-${item.res.id}-${item.desde || 'mensual'}-${i}`}
-                      res={item.res}
-                      pagado
-                      recibo={item.recibo}
-                      semanaLabel={item.label}
-                      deleting={deletingId === item.recibo?.id}
-                      onEliminar={() => handleEliminar(item.recibo.id)}
-                    />
-                  ))}
-                </>
-              )}
-            </div>
-          )}
+            )}
 
-          {/* ── CENTRO DE DÍA ── */}
-          {centroDiaItems.length > 0 && (
-            <div style={{ padding: '12px 16px 0' }}>
-              <div style={{ ...sectionTitle('#1565c0'), marginBottom: 10 }}>
-                ☀️ Centro de Día
-              </div>
-              {pendientesCD.length > 0 && (
-                <>
-                  <div style={sectionTitle('#e65c00')}>Pendientes · {pendientesCD.length}</div>
-                  {pendientesCD.map((item, i) => (
-                    <ResidenteRow
-                      key={`cd-pend-${item.res.id}-${i}`}
-                      res={item.res}
-                      pagado={false}
-                      onGenerar={() => onGenerar(item.res, year, month, null, null)}
-                    />
-                  ))}
-                </>
-              )}
-              {pagadosCD.length > 0 && (
-                <>
-                  <div style={sectionTitle('#2e7d32')}>Pagados · {pagadosCD.length}</div>
-                  {pagadosCD.map((item, i) => (
-                    <ResidenteRow
-                      key={`cd-paid-${item.res.id}-${i}`}
-                      res={item.res}
-                      pagado
-                      recibo={item.recibo}
-                      deleting={deletingId === item.recibo?.id}
-                      onEliminar={() => handleEliminar(item.recibo.id)}
-                    />
-                  ))}
-                </>
-              )}
-            </div>
-          )}
+            {pendientesActivos.length > 0 && (
+              <>
+                <div style={sectionTitle('#e65c00')}>Pendientes · {pendientesActivos.length}</div>
+                {pendientesActivos.map((item, i) => (
+                  <ResidenteRow
+                    key={`pend-${item.res.id}-${item.desde || 'mensual'}-${i}`}
+                    res={item.res}
+                    pagado={false}
+                    semanaLabel={item.label}
+                    onGenerar={() => onGenerar(item.res, year, month, item.desde ?? null, item.hasta ?? null)}
+                  />
+                ))}
+              </>
+            )}
+
+            {pagadosActivos.length > 0 && (
+              <>
+                <div style={sectionTitle('#2e7d32')}>Pagados · {pagadosActivos.length}</div>
+                {pagadosActivos.map((item, i) => (
+                  <ResidenteRow
+                    key={`paid-${item.res.id}-${item.desde || 'mensual'}-${i}`}
+                    res={item.res}
+                    pagado
+                    recibo={item.recibo}
+                    semanaLabel={item.label}
+                    deleting={deletingId === item.recibo?.id}
+                    onEliminar={() => handleEliminar(item.recibo.id)}
+                  />
+                ))}
+              </>
+            )}
+          </div>
         </>
       )}
       <div style={{ height: 20 }} />
@@ -313,22 +323,25 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
   const [error, setError] = useState('')
 
   // Calcular fechas según frecuencia
-  const esSemanal  = residente.frecuencia === 'semanal'
-  const diasEnMes  = new Date(year, month, 0).getDate()
-  const diaReal    = Math.min(residente.dia_pago || 1, diasEnMes)
-  const fechaBase  = desdeOverride || `${year}-${String(month).padStart(2,'0')}-${String(diaReal).padStart(2,'0')}`
-  const fechaHasta = hastaOverride || (esSemanal ? sumarDias(fechaBase, 6) : sumarUnMes(fechaBase))
+  const esCentroDia = residente.tipo_servicio === 'centro_dia'
+  const esSemanal   = residente.frecuencia === 'semanal'
+  const diasEnMes   = new Date(year, month, 0).getDate()
+  const diaReal     = Math.min(residente.dia_pago || 1, diasEnMes)
+  const fechaBase   = desdeOverride || `${year}-${String(month).padStart(2,'0')}-${String(diaReal).padStart(2,'0')}`
+  const fechaHasta  = hastaOverride || (esSemanal && !esCentroDia ? sumarDias(fechaBase, 6) : sumarUnMes(fechaBase))
 
   const [form, setForm] = useState({
-    fecha:         fechaBase,
-    periodo_de:    fechaBase,
-    periodo_hasta: fechaHasta,
-    valor:         residente.mensualidad ? String(residente.mensualidad) : '',
-    forma_pago:    'efectivo',
-    observaciones: `Mensualidad ${residente.nombre.trim().split(/\s+/)[0]}`,
-    concepto:      residente.tipo_servicio === 'centro_dia' ? 'centro_dia' : 'hospedaje',
-    conceptoOtro:  '',
-    mostrarPeriodo: true,
+    fecha:           fechaBase,
+    periodo_de:      fechaBase,
+    periodo_hasta:   fechaHasta,
+    valor:           residente.mensualidad ? String(residente.mensualidad) : '',
+    forma_pago:      'efectivo',
+    observaciones:   `Mensualidad ${residente.nombre.trim().split(/\s+/)[0]}`,
+    concepto:        esCentroDia ? 'centro_dia' : 'hospedaje',
+    conceptoOtro:    '',
+    mostrarPeriodo:  true,
+    dias_asistencia: residente.dias_asistencia != null ? String(residente.dias_asistencia) : '5',
+    horario_horas:   residente.horario_horas   != null ? String(residente.horario_horas)   : '8',
   })
 
   useEffect(() => {
@@ -350,17 +363,19 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
         : form.concepto
 
       const datos = {
-        numero:        nextNum,
-        nombre:        residente.familiar || residente.nombre,
-        ciudad:        residente.ciudad || 'Mérida, Yucatán',
-        fecha:         form.fecha,
-        periodo_de:    form.periodo_de,
-        periodo_hasta: form.periodo_hasta,
-        valor:         parseFloat(form.valor),
-        forma_pago:     form.forma_pago,
-        observaciones:  form.observaciones,
-        concepto:       conceptoFinal,
-        mostrarPeriodo: form.mostrarPeriodo,
+        numero:          nextNum,
+        nombre:          residente.familiar || residente.nombre,
+        ciudad:          residente.ciudad || 'Mérida, Yucatán',
+        fecha:           form.fecha,
+        periodo_de:      form.periodo_de,
+        periodo_hasta:   form.periodo_hasta,
+        valor:           parseFloat(form.valor),
+        forma_pago:      form.forma_pago,
+        observaciones:   form.observaciones,
+        concepto:        conceptoFinal,
+        mostrarPeriodo:  form.mostrarPeriodo,
+        dias_asistencia: esCentroDia ? parseInt(form.dias_asistencia) || null : null,
+        horario_horas:   esCentroDia ? parseInt(form.horario_horas)   || null : null,
       }
 
       const res = await fetch('/api/recibos', {
@@ -476,6 +491,38 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
           />
         )}
       </div>
+
+      {/* Campos Centro de Día */}
+      {esCentroDia && (
+        <div className="form-card">
+          <div className="section-label">Centro de Día</div>
+          <div className="input-group" style={{ marginBottom: 12 }}>
+            <label>Días que asiste por semana</label>
+            <input
+              className="input"
+              type="number"
+              min="1"
+              max="7"
+              value={form.dias_asistencia}
+              onChange={e => setForm(f => ({ ...f, dias_asistencia: e.target.value }))}
+              inputMode="numeric"
+              style={{ textAlign: 'center', fontWeight: 700, fontSize: 18 }}
+            />
+          </div>
+          <div className="input-group">
+            <label>Horario diario</label>
+            <div className="turn-toggle" style={{ marginTop: 6 }}>
+              {[['8','8 horas'],['10','10 horas'],['12','12 horas']].map(([v,l]) => (
+                <button key={v} type="button"
+                  className={`turn-btn${form.horario_horas === v ? ' active' : ''}`}
+                  onClick={() => setForm(f => ({ ...f, horario_horas: v }))}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Valor */}
       <div className="form-card">
