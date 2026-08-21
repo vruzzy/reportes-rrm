@@ -231,6 +231,8 @@ function emptyForm() {
       fr:            '',
       temperatura:   '',
     },
+    micciones:        0,
+    evacuaciones:     0,
     enfermero:        '',
     horaReporte:      nowHHMM(),
     fecha:            todayISO(),
@@ -323,6 +325,8 @@ export default function ReporteForm() {
           sueño:                   turno === 'Nocturno' ? form.sueño : [],
           observacionesEspeciales: form.observacionesEspeciales,
           signosVitales:           form.signosVitales,
+          micciones:               form.micciones,
+          evacuaciones:            form.evacuaciones,
           enfermero:               form.enfermero,
           horaReporte:             form.horaReporte,
           notasAdicionales:        form.notasAdicionales,
@@ -649,6 +653,45 @@ export default function ReporteForm() {
             </span>
           </div>
         )}
+      </SectionCard>
+
+      {/* ── MICCIONES Y EVACUACIONES ── */}
+      <SectionCard title="Micciones y evacuaciones">
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          {[
+            { field: 'micciones',    label: 'Micciones',    emoji: '💧' },
+            { field: 'evacuaciones', label: 'Evacuaciones',  emoji: '🚽' },
+          ].map(({ field, label, emoji }) => (
+            <div key={field} style={{ flex: 1, minWidth: 140 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                {emoji} {label}
+              </div>
+              <div className="diaper-counter">
+                <button
+                  type="button"
+                  className="counter-btn"
+                  onClick={() => setForm(f => ({ ...f, [field]: Math.max(0, f[field] - 1) }))}
+                  disabled={form[field] <= 0}
+                  aria-label={`Restar ${label}`}
+                >
+                  −
+                </button>
+                <span className="counter-value">{form[field]}</span>
+                <button
+                  type="button"
+                  className="counter-btn"
+                  onClick={() => setForm(f => ({ ...f, [field]: f[field] + 1 }))}
+                  aria-label={`Sumar ${label}`}
+                >
+                  +
+                </button>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 6, textAlign: 'center' }}>
+                {form[field] === 0 ? 'Sin registrar' : `${form[field]} ${form[field] === 1 ? 'vez' : 'veces'}`}
+              </div>
+            </div>
+          ))}
+        </div>
       </SectionCard>
 
       {/* ── RESPONSABLE ── */}
