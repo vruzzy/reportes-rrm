@@ -152,7 +152,34 @@ ${contextAprendizaje ? `\nCONTEXTO DE REPORTES ANTERIORES — aprende el estilo 
       messages: [{ role: 'user', content: prompt }],
     });
 
-    res.json({ reporte: message.content[0].text });
+    const textoReporte = message.content[0].text;
+
+    // Guardar reporte en historial
+    if (residente?.id) {
+      try {
+        db.prepare(`
+          INSERT INTO reportes
+            (residente_id, fecha, turno, texto_reporte, notas_adicionales,
+             signos_vitales, alimentacion, medicamentos, observaciones_especiales,
+             micciones, evacuaciones)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run([
+          residente.id,
+          fecha,
+          turno,
+          textoReporte,
+          notasAdicionales || '',
+          JSON.stringify(signosVitales || {}),
+          alimentacion || '',
+          medicamentos || '',
+          Array.isArray(observacionesEspeciales) ? observacionesEspeciales.join(', ') : '',
+          JSON.stringify(micciones || []),
+          JSON.stringify(evacuaciones || []),
+        ]);
+      } catch (e) { /* no bloquear si falla el guardado */ }
+    }
+
+    res.json({ reporte: textoReporte });
   } catch (error) {
     console.error('Anthropic API error:', error);
     const msg = error?.message || 'Error desconocido al llamar a la API de Anthropic';

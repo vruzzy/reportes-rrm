@@ -55,6 +55,25 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reportes (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    residente_id            INTEGER,
+    fecha                   TEXT NOT NULL,
+    turno                   TEXT NOT NULL,
+    texto_reporte           TEXT NOT NULL,
+    notas_adicionales       TEXT DEFAULT '',
+    signos_vitales          TEXT DEFAULT '{}',
+    alimentacion            TEXT DEFAULT '',
+    medicamentos            TEXT DEFAULT '',
+    observaciones_especiales TEXT DEFAULT '',
+    micciones               TEXT DEFAULT '[]',
+    evacuaciones            TEXT DEFAULT '[]',
+    creado_en               TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (residente_id) REFERENCES residentes(id) ON DELETE SET NULL
+  )
+`);
+
 // Migraciones: agregar columnas nuevas si no existen
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_original TEXT DEFAULT ''`) } catch {}
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_editado TEXT DEFAULT ''`) } catch {}

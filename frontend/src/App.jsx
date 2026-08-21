@@ -2,6 +2,7 @@ import { useState } from 'react'
 import ReporteForm from './components/ReporteForm'
 import ResidentesAdmin from './components/ResidentesAdmin'
 import RecibosForm from './components/RecibosForm'
+import HistorialForm from './components/HistorialForm'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('recibos')
@@ -11,6 +12,7 @@ export default function App() {
       <div className="app-content">
         {activeTab === 'recibos'    && <RecibosForm />}
         {activeTab === 'reporte'    && <ReporteForm />}
+        {activeTab === 'historial'  && <HistorialForm />}
         {activeTab === 'residentes' && <ResidentesAdmin />}
       </div>
 
@@ -37,6 +39,17 @@ export default function App() {
             <line x1="9" y1="16" x2="13" y2="16"/>
           </svg>
           <span>Reportes</span>
+        </button>
+
+        <button
+          className={`nav-tab${activeTab === 'historial' ? ' active' : ''}`}
+          onClick={() => setActiveTab('historial')}
+        >
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>Historial</span>
         </button>
 
         <button

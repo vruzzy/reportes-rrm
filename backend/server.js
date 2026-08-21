@@ -6,6 +6,7 @@ const path = require('path');
 const residentesRoutes = require('./routes/residentes');
 const reporteRoutes    = require('./routes/reporte');
 const recibosRoutes    = require('./routes/recibos');
+const historialRoutes  = require('./routes/historial');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -20,6 +21,7 @@ app.use(express.json({ limit: '1mb' }));
 // API Routes
 app.use('/api/residentes', residentesRoutes);
 app.use('/api/recibos',   recibosRoutes);
+app.use('/api/historial', historialRoutes);
 app.use('/api', reporteRoutes);
 
 // Health check
