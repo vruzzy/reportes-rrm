@@ -244,6 +244,7 @@ export default function ReporteForm() {
   const [residentes, setResidentes]         = useState([])
   const [loadingRes, setLoadingRes]         = useState(true)
   const [selectedRes, setSelectedRes]       = useState(null)
+  const [vistaRes, setVistaRes]             = useState('residencia_permanente')
   const [turno, setTurno]                   = useState('Matutino-Vespertino')
   const [form, setForm]                     = useState(emptyForm)
   const [generating, setGenerating]         = useState(false)
@@ -406,6 +407,23 @@ export default function ReporteForm() {
 
       {/* ── SELECCIÓN DE RESIDENTE ── */}
       <SectionCard title="Residente">
+        {/* Toggle tipo */}
+        <div className="turn-toggle" style={{ marginBottom: 14 }}>
+          {[
+            ['residencia_permanente', '🏠 Estancia Permanente'],
+            ['centro_dia',            '☀️ Centro de Día'],
+          ].map(([v, l]) => (
+            <button
+              key={v}
+              type="button"
+              className={`turn-btn${vistaRes === v ? ' active' : ''}`}
+              onClick={() => { setVistaRes(v); setSelectedRes(null) }}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+
         {loadingRes ? (
           <div className="chip-grid">
             {[1,2,3,4].map(i => (
@@ -416,22 +434,31 @@ export default function ReporteForm() {
           <div className="empty-residents">
             No hay residentes. Agrégalos en la pestaña "Residentes".
           </div>
-        ) : (
-          <div className="resident-grid">
-            {residentes.map(r => (
-              <button
-                key={r.id}
-                type="button"
-                className={`resident-card${selectedRes?.id === r.id ? ' selected' : ''}`}
-                onClick={() => setSelectedRes(selectedRes?.id === r.id ? null : r)}
-              >
-                <div className="resident-avatar">{r.iniciales}</div>
-                <div className="resident-name">{r.nombre}</div>
-                <div className="resident-room">Hab. {r.habitacion}</div>
-              </button>
-            ))}
-          </div>
-        )}
+        ) : (() => {
+          const filtrados = residentes.filter(r =>
+            (r.tipo_servicio || 'residencia_permanente') === vistaRes
+          )
+          return filtrados.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14, padding: '16px 0' }}>
+              No hay residentes de este tipo registrados.
+            </div>
+          ) : (
+            <div className="resident-grid">
+              {filtrados.map(r => (
+                <button
+                  key={r.id}
+                  type="button"
+                  className={`resident-card${selectedRes?.id === r.id ? ' selected' : ''}`}
+                  onClick={() => setSelectedRes(selectedRes?.id === r.id ? null : r)}
+                >
+                  <div className="resident-avatar">{r.iniciales}</div>
+                  <div className="resident-name">{r.nombre}</div>
+                  <div className="resident-room">Hab. {r.habitacion}</div>
+                </button>
+              ))}
+            </div>
+          )
+        })()}
       </SectionCard>
 
       {/* ── TURNO ── */}
