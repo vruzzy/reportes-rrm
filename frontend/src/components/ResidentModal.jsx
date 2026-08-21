@@ -227,10 +227,10 @@ export default function ResidentModal({ residente, onSave, onClose }) {
               </div>
             )}
 
-            {/* Tarifa mensual — solo Centro de Día */}
+            {/* Tarifa semanal — solo Centro de Día */}
             {form.tipo_servicio === 'centro_dia' && (
               <div className="field-group">
-                <label htmlFor="mensualidad">Tarifa mensual ($)</label>
+                <label htmlFor="mensualidad">Tarifa semanal ($)</label>
                 <input
                   id="mensualidad"
                   className="input"
