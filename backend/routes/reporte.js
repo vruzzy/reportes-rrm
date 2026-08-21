@@ -100,9 +100,17 @@ router.post('/generar-reporte', async (req, res) => {
       ].filter(Boolean).join('\n\n')
     : '';
 
+  const ahora = new Date()
+  const semilla = `${ahora.getFullYear()}-${ahora.getMonth()}-${ahora.getDate()}-${ahora.getHours()}-${Math.floor(Math.random() * 10000)}`
+
   const prompt = `Redacta el reporte de turno de enfermería de la Residencia Refugio Mendoza. Escribe como enfermera profesional: directo, concreto, en tercera persona.
 
-REGLAS DE ESTILO — LEE CON ATENCIÓN:
+VARIACIÓN OBLIGATORIA (semilla: ${semilla}):
+- Este reporte DEBE sonar diferente a cualquier reporte anterior, aunque los datos sean idénticos.
+- Varía libremente: el orden en que presentas la información, la longitud de las oraciones, las expresiones clínicas elegidas, la estructura del párrafo.
+- Nunca empieces igual dos veces seguidas ni uses la misma frase de apertura.
+
+REGLAS DE ESTILO:
 - NUNCA copies textualmente las etiquetas del formulario. Tradúcelas a lenguaje clínico narrativo. Ejemplos:
     "Activo/a con buen semblante" → "se recibe alerta y orientado/a", "se encuentra en buen estado general", "se observa despierto/a y sin alteraciones aparentes"
     "Accesible / Cooperador/a" → "muestra buena disposición", "colabora con los cuidados", "se muestra receptivo/a"
@@ -140,6 +148,7 @@ ${contextAprendizaje ? `\nCONTEXTO DE REPORTES ANTERIORES — aprende el estilo 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
+      temperature: 1,
       messages: [{ role: 'user', content: prompt }],
     });
 
