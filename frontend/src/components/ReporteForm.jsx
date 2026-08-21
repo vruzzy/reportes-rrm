@@ -232,7 +232,9 @@ function emptyForm() {
       temperatura:   '',
     },
     micciones:        0,
+    caracMiccion:     [],
     evacuaciones:     0,
+    caracEvacuacion:  [],
     enfermero:        '',
     horaReporte:      nowHHMM(),
     fecha:            todayISO(),
@@ -326,7 +328,9 @@ export default function ReporteForm() {
           observacionesEspeciales: form.observacionesEspeciales,
           signosVitales:           form.signosVitales,
           micciones:               form.micciones,
+          caracMiccion:            form.caracMiccion,
           evacuaciones:            form.evacuaciones,
+          caracEvacuacion:         form.caracEvacuacion,
           enfermero:               form.enfermero,
           horaReporte:             form.horaReporte,
           notasAdicionales:        form.notasAdicionales,
@@ -655,43 +659,78 @@ export default function ReporteForm() {
         )}
       </SectionCard>
 
-      {/* ── MICCIONES Y EVACUACIONES ── */}
-      <SectionCard title="Micciones y evacuaciones">
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-          {[
-            { field: 'micciones',    label: 'Micciones',    emoji: '💧' },
-            { field: 'evacuaciones', label: 'Evacuaciones',  emoji: '🚽' },
-          ].map(({ field, label, emoji }) => (
-            <div key={field} style={{ flex: 1, minWidth: 140 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>
-                {emoji} {label}
-              </div>
-              <div className="diaper-counter">
-                <button
-                  type="button"
-                  className="counter-btn"
-                  onClick={() => setForm(f => ({ ...f, [field]: Math.max(0, f[field] - 1) }))}
-                  disabled={form[field] <= 0}
-                  aria-label={`Restar ${label}`}
-                >
-                  −
-                </button>
-                <span className="counter-value">{form[field]}</span>
-                <button
-                  type="button"
-                  className="counter-btn"
-                  onClick={() => setForm(f => ({ ...f, [field]: f[field] + 1 }))}
-                  aria-label={`Sumar ${label}`}
-                >
-                  +
-                </button>
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 6, textAlign: 'center' }}>
-                {form[field] === 0 ? 'Sin registrar' : `${form[field]} ${form[field] === 1 ? 'vez' : 'veces'}`}
-              </div>
-            </div>
-          ))}
+      {/* ── MICCIONES ── */}
+      <SectionCard title="Micciones">
+        <div className="diaper-row" style={{ marginBottom: 14 }}>
+          <div className="diaper-counter">
+            <button type="button" className="counter-btn"
+              onClick={() => setForm(f => ({ ...f, micciones: Math.max(0, f.micciones - 1) }))}
+              disabled={form.micciones <= 0} aria-label="Restar micción">−</button>
+            <span className="counter-value">{form.micciones}</span>
+            <button type="button" className="counter-btn"
+              onClick={() => setForm(f => ({ ...f, micciones: f.micciones + 1 }))}
+              aria-label="Sumar micción">+</button>
+          </div>
+          <span className="counter-label">
+            {form.micciones === 0 ? 'Sin registrar' : form.micciones === 1 ? '1 vez' : `${form.micciones} veces`}
+          </span>
         </div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Características de la orina
+        </div>
+        <ChipMulti
+          options={[
+            'Clara / Normal',
+            'Amarillo oscuro / Concentrada',
+            'Turbia',
+            'Con sedimento',
+            'Rojiza / Hematúrica',
+            'Anaranjada',
+            'Con mal olor',
+            'Escasa (oliguria)',
+            'Abundante (poliuria)',
+            'Incontinencia',
+          ]}
+          selected={form.caracMiccion}
+          onSelect={v => setForm(f => ({ ...f, caracMiccion: v }))}
+        />
+      </SectionCard>
+
+      {/* ── EVACUACIONES ── */}
+      <SectionCard title="Evacuaciones">
+        <div className="diaper-row" style={{ marginBottom: 14 }}>
+          <div className="diaper-counter">
+            <button type="button" className="counter-btn"
+              onClick={() => setForm(f => ({ ...f, evacuaciones: Math.max(0, f.evacuaciones - 1) }))}
+              disabled={form.evacuaciones <= 0} aria-label="Restar evacuación">−</button>
+            <span className="counter-value">{form.evacuaciones}</span>
+            <button type="button" className="counter-btn"
+              onClick={() => setForm(f => ({ ...f, evacuaciones: f.evacuaciones + 1 }))}
+              aria-label="Sumar evacuación">+</button>
+          </div>
+          <span className="counter-label">
+            {form.evacuaciones === 0 ? 'Sin registrar' : form.evacuaciones === 1 ? '1 vez' : `${form.evacuaciones} veces`}
+          </span>
+        </div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Características de la evacuación
+        </div>
+        <ChipMulti
+          options={[
+            'Formada / Normal',
+            'Blanda',
+            'Pastosa',
+            'Líquida / Diarrea',
+            'Dura / Estreñimiento',
+            'Con sangre',
+            'Con moco',
+            'Melénica (negra)',
+            'Fétida',
+            'Incontinencia fecal',
+          ]}
+          selected={form.caracEvacuacion}
+          onSelect={v => setForm(f => ({ ...f, caracEvacuacion: v }))}
+        />
       </SectionCard>
 
       {/* ── RESPONSABLE ── */}
