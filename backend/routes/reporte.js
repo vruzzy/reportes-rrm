@@ -49,6 +49,8 @@ router.post('/generar-reporte', async (req, res) => {
     horaReporte,
     notasAdicionales,
     sueño,
+    micciones,
+    evacuaciones,
   } = req.body;
 
   const cuidadosTexto = Array.isArray(cuidadosRealizados)
@@ -65,6 +67,20 @@ router.post('/generar-reporte', async (req, res) => {
 
   const sueñoTexto = Array.isArray(sueño) && sueño.length
     ? sueño.join(', ')
+    : '';
+
+  const miccionesTexto = Array.isArray(micciones) && micciones.length
+    ? micciones.map((carac, i) => {
+        const desc = Array.isArray(carac) && carac.length ? carac.join(', ') : 'sin características registradas';
+        return `Micción ${i + 1}: ${desc}`;
+      }).join(' | ')
+    : '';
+
+  const evacuacionesTexto = Array.isArray(evacuaciones) && evacuaciones.length
+    ? evacuaciones.map((carac, i) => {
+        const desc = Array.isArray(carac) && carac.length ? carac.join(', ') : 'sin características registradas';
+        return `Evacuación ${i + 1}: ${desc}`;
+      }).join(' | ')
     : '';
 
   const aprendizaje = residente?.id
@@ -86,16 +102,23 @@ router.post('/generar-reporte', async (req, res) => {
 
   const prompt = `Redacta el reporte de turno de enfermería de la Residencia Refugio Mendoza. Escribe como enfermera profesional: directo, concreto, en tercera persona.
 
-REGLAS DE ESTILO:
-- Varía el inicio del reporte: puedes usar "Se recibe al paciente...", "Al inicio del turno...", "Durante el turno...", "El paciente se encuentra..." u otras frases naturales. NUNCA uses siempre el mismo inicio.
-- Frases cortas y concretas. Sin adornos ni valoraciones positivas vacías.
-- PROHIBIDO usar "buen semblante" a menos que esté en el estado al recibir. Usa sinónimos variados: "estable", "tranquilo/a", "sin alteraciones aparentes", "en buen estado general", etc.
-- Describe EXACTAMENTE lo que dicen los datos. Si está agitado, dilo. Si rechazó alimentos, dilo.
-- Las NOTAS ADICIONALES son lo más importante — deben quedar reflejadas claramente en el reporte.
-- Sin asteriscos, guiones, emojis ni encabezados
-- NO menciones signos vitales
-- NO uses frases como "es motivo de satisfacción", "lo cual es positivo" ni similares
-- Máximo 150 palabras
+REGLAS DE ESTILO — LEE CON ATENCIÓN:
+- NUNCA copies textualmente las etiquetas del formulario. Tradúcelas a lenguaje clínico narrativo. Ejemplos:
+    "Activo/a con buen semblante" → "se recibe alerta y orientado/a", "se encuentra en buen estado general", "se observa despierto/a y sin alteraciones aparentes"
+    "Accesible / Cooperador/a" → "muestra buena disposición", "colabora con los cuidados", "se muestra receptivo/a"
+    "Administrados en tiempo y forma" → "se administra medicación según indicación médica", "recibe su tratamiento habitual sin incidencias"
+    "Completa" (alimentación) → "acepta la dieta completa", "ingiere sin dificultad", "tolera adecuadamente los alimentos"
+    "Sin novedades" → "turno sin incidencias relevantes", "sin eventos de importancia durante el turno"
+    "Cambio de pañal" → "se realizan cambios de pañal", "se lleva a cabo higiene íntima"
+    "Durmió bien toda la noche" → "descansa de forma continua durante la noche", "presenta sueño reparador sin interrupciones"
+- Varía el inicio del reporte cada vez: "Se recibe al paciente...", "Al inicio del turno...", "Durante el turno...", "El/La residente se encuentra...", "Al momento de la recepción..." u otras frases naturales distintas.
+- Frases cortas y concretas. Sin adornos ni valoraciones vacías.
+- Describe con exactitud lo registrado. Si hay diarrea, nómbrala. Si hay incontinencia, menciónala con vocabulario clínico.
+- Las NOTAS ADICIONALES son lo más importante: deben quedar integradas con claridad.
+- Sin asteriscos, guiones, emojis ni encabezados.
+- NO menciones signos vitales.
+- NO uses frases como "es motivo de satisfacción", "lo cual es positivo" ni similares.
+- Máximo 160 palabras.
 
 DATOS DEL TURNO:
 Residente: ${residente?.nombre || 'No especificado'}
@@ -108,6 +131,8 @@ Medicamentos: ${medicamentos || 'Sin datos'}
 ${turno !== 'Nocturno' && actividadesTexto ? `Actividades del día: ${actividadesTexto}` : ''}
 ${turno === 'Nocturno' && sueñoTexto ? `Sueño: ${sueñoTexto}` : ''}
 Observaciones especiales: ${Array.isArray(observacionesEspeciales) && observacionesEspeciales.length ? observacionesEspeciales.join(', ') : 'Sin novedades'}
+${miccionesTexto ? `Micciones (${micciones.length}): ${miccionesTexto}` : 'Micciones: Sin registrar'}
+${evacuacionesTexto ? `Evacuaciones (${evacuaciones.length}): ${evacuacionesTexto}` : 'Evacuaciones: Sin registrar'}
 NOTAS ADICIONALES (integra esto en el reporte): ${notasAdicionales?.trim() || ''}
 ${contextAprendizaje ? `\nCONTEXTO DE REPORTES ANTERIORES — aprende el estilo y NO repitas las mismas frases:\n${contextAprendizaje}` : ''}`;
 
