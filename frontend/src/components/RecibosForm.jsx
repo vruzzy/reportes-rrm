@@ -336,7 +336,9 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
     periodo_hasta:   fechaHasta,
     valor:           residente.mensualidad ? String(residente.mensualidad) : '',
     forma_pago:      'efectivo',
-    observaciones:   `Mensualidad ${residente.nombre.trim().split(/\s+/)[0]}`,
+    observaciones:   esCentroDia
+      ? `Centro de Día ${residente.nombre.trim().split(/\s+/)[0]}`
+      : `Mensualidad ${residente.nombre.trim().split(/\s+/)[0]}`,
     concepto:        esCentroDia ? 'centro_dia' : 'hospedaje',
     conceptoOtro:    '',
     mostrarPeriodo:  true,
