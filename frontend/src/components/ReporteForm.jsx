@@ -659,9 +659,11 @@ export default function ReporteForm() {
         )}
       </SectionCard>
 
-      {/* ── MICCIONES ── */}
-      <SectionCard title="Micciones">
-        <div className="diaper-row" style={{ marginBottom: 14 }}>
+      {/* ── MICCIONES Y EVACUACIONES ── */}
+      <SectionCard title="Micciones y evacuaciones">
+        {/* Micciones */}
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>💧 Micciones</div>
+        <div className="diaper-row" style={{ marginBottom: 10 }}>
           <div className="diaper-counter">
             <button type="button" className="counter-btn"
               onClick={() => setForm(f => ({ ...f, micciones: Math.max(0, f.micciones - 1) }))}
@@ -675,30 +677,25 @@ export default function ReporteForm() {
             {form.micciones === 0 ? 'Sin registrar' : form.micciones === 1 ? '1 vez' : `${form.micciones} veces`}
           </span>
         </div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Características de la orina
         </div>
         <ChipMulti
           options={[
-            'Clara / Normal',
-            'Amarillo oscuro / Concentrada',
-            'Turbia',
-            'Con sedimento',
-            'Rojiza / Hematúrica',
-            'Anaranjada',
-            'Con mal olor',
-            'Escasa (oliguria)',
-            'Abundante (poliuria)',
-            'Incontinencia',
+            'Clara / Normal', 'Amarillo oscuro / Concentrada', 'Turbia',
+            'Con sedimento', 'Rojiza / Hematúrica', 'Anaranjada',
+            'Con mal olor', 'Escasa (oliguria)', 'Abundante (poliuria)', 'Incontinencia',
           ]}
           selected={form.caracMiccion}
           onSelect={v => setForm(f => ({ ...f, caracMiccion: v }))}
         />
-      </SectionCard>
 
-      {/* ── EVACUACIONES ── */}
-      <SectionCard title="Evacuaciones">
-        <div className="diaper-row" style={{ marginBottom: 14 }}>
+        {/* Divisor */}
+        <div style={{ borderTop: '1px solid var(--border)', margin: '16px 0' }} />
+
+        {/* Evacuaciones */}
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>🚽 Evacuaciones</div>
+        <div className="diaper-row" style={{ marginBottom: 10 }}>
           <div className="diaper-counter">
             <button type="button" className="counter-btn"
               onClick={() => setForm(f => ({ ...f, evacuaciones: Math.max(0, f.evacuaciones - 1) }))}
@@ -712,21 +709,14 @@ export default function ReporteForm() {
             {form.evacuaciones === 0 ? 'Sin registrar' : form.evacuaciones === 1 ? '1 vez' : `${form.evacuaciones} veces`}
           </span>
         </div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Características de la evacuación
         </div>
         <ChipMulti
           options={[
-            'Formada / Normal',
-            'Blanda',
-            'Pastosa',
-            'Líquida / Diarrea',
-            'Dura / Estreñimiento',
-            'Con sangre',
-            'Con moco',
-            'Melénica (negra)',
-            'Fétida',
-            'Incontinencia fecal',
+            'Formada / Normal', 'Blanda', 'Pastosa',
+            'Líquida / Diarrea', 'Dura / Estreñimiento', 'Con sangre',
+            'Con moco', 'Melénica (negra)', 'Fétida', 'Incontinencia fecal',
           ]}
           selected={form.caracEvacuacion}
           onSelect={v => setForm(f => ({ ...f, caracEvacuacion: v }))}
