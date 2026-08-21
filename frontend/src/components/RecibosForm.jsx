@@ -509,18 +509,6 @@ function ReciboFormView({ residente, year, month, desdeOverride, hastaOverride, 
               style={{ textAlign: 'center', fontWeight: 700, fontSize: 18 }}
             />
           </div>
-          <div className="input-group">
-            <label>Horario diario</label>
-            <div className="turn-toggle" style={{ marginTop: 6 }}>
-              {[['8','8 horas'],['10','10 horas'],['12','12 horas']].map(([v,l]) => (
-                <button key={v} type="button"
-                  className={`turn-btn${form.horario_horas === v ? ' active' : ''}`}
-                  onClick={() => setForm(f => ({ ...f, horario_horas: v }))}>
-                  {l}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       )}
 

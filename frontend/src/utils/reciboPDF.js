@@ -268,17 +268,13 @@ export async function generarReciboPDF(datos) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(11)
 
-  if (esCentroDia && (dias_asistencia || horario_horas)) {
-    // 3 líneas: título + detalles + período
+  if (esCentroDia && dias_asistencia) {
+    // 3 líneas: título + días + período
     pdf.text(tituloPago, PW / 2, BOX_Y + 9, { align: 'center' })
 
-    const detalles = [
-      horario_horas   ? `HORARIO: ${horario_horas} HRS. DIARIAS` : null,
-      dias_asistencia ? `${dias_asistencia} DÍAS POR SEMANA`      : null,
-    ].filter(Boolean).join('  —  ')
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(9)
-    pdf.text(detalles, PW / 2, BOX_Y + 17, { align: 'center' })
+    pdf.text(`${dias_asistencia} DÍAS POR SEMANA`, PW / 2, BOX_Y + 17, { align: 'center' })
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(11)
 
