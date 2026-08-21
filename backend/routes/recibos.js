@@ -29,6 +29,24 @@ router.get('/', (req, res) => {
   }
 });
 
+// GET /api/recibos/ultimos-centro-dia — último recibo de cada residente Centro de Día
+router.get('/ultimos-centro-dia', (req, res) => {
+  try {
+    const recibos = db.prepare(`
+      SELECT r.* FROM recibos r
+      WHERE r.residente_id IN (SELECT id FROM residentes WHERE tipo_servicio = 'centro_dia')
+      AND r.id IN (
+        SELECT MAX(id) FROM recibos
+        WHERE residente_id IN (SELECT id FROM residentes WHERE tipo_servicio = 'centro_dia')
+        GROUP BY residente_id
+      )
+    `).all()
+    res.json(recibos)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+});
+
 // GET /api/recibos/proximo-numero — siguiente número de recibo
 router.get('/proximo-numero', (req, res) => {
   try {

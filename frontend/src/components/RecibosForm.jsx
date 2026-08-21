@@ -40,15 +40,19 @@ function CalendarioView({ onGenerar }) {
 
   const mesStr = mesISO(year, month)
 
+  const [ultimosCentroDia, setUltimosCentroDia] = useState([])
+
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [rRes, recRes] = await Promise.all([
+      const [rRes, recRes, cdRes] = await Promise.all([
         fetch('/api/residentes'),
         fetch(`/api/recibos?mes=${mesStr}`),
+        fetch('/api/recibos/ultimos-centro-dia'),
       ])
       setResidentes(await rRes.json())
       setRecibos(await recRes.json())
+      setUltimosCentroDia(await cdRes.json())
     } catch { /* silencioso */ } finally {
       setLoading(false)
     }
@@ -99,9 +103,13 @@ function CalendarioView({ onGenerar }) {
           label: labelSemana(desde, hasta),
         })
       })
+    } else if (esCentroDia) {
+      // Centro de Día: siempre pendiente, muestra último pago como referencia
+      const lastRecibo = ultimosCentroDia.find(r => r.residente_id === res.id) || null
+      items.push({ res, recibo: null, lastRecibo, pagado: false, tipo: 'centro_dia' })
     } else {
       const recibo = recibos.find(r => r.residente_id === res.id)
-      items.push({ res, recibo, pagado: Boolean(recibo), tipo: esCentroDia ? 'centro_dia' : 'mensual' })
+      items.push({ res, recibo, pagado: Boolean(recibo), tipo: 'mensual' })
     }
   })
 
@@ -207,6 +215,7 @@ function CalendarioView({ onGenerar }) {
                     res={item.res}
                     pagado={false}
                     semanaLabel={item.label}
+                    lastRecibo={item.lastRecibo ?? null}
                     onGenerar={() => onGenerar(item.res, year, month, item.desde ?? null, item.hasta ?? null)}
                   />
                 ))}
@@ -250,7 +259,7 @@ function sectionTitle(color) {
   }
 }
 
-function ResidenteRow({ res, pagado, recibo, deleting, onGenerar, onEliminar, semanaLabel }) {
+function ResidenteRow({ res, pagado, recibo, lastRecibo, deleting, onGenerar, onEliminar, semanaLabel }) {
   return (
     <div style={{
       background: 'var(--surface)',
@@ -283,6 +292,11 @@ function ResidenteRow({ res, pagado, recibo, deleting, onGenerar, onEliminar, se
           {semanaLabel ? semanaLabel : `Día ${res.dia_pago || 1}`}
           {pagado && recibo && <span> · {formatPesos(recibo.valor)}</span>}
         </div>
+        {lastRecibo && (
+          <div style={{ fontSize: 11, color: '#2e7d32', marginTop: 3 }}>
+            Último pago: {lastRecibo.fecha} · {formatPesos(lastRecibo.valor)}
+          </div>
+        )}
       </div>
 
       {/* Acción */}
