@@ -3,6 +3,7 @@ import ReporteForm from './components/ReporteForm'
 import ResidentesAdmin from './components/ResidentesAdmin'
 import RecibosForm from './components/RecibosForm'
 import HistorialForm from './components/HistorialForm'
+import CalendarioForm from './components/CalendarioForm'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('recibos')
@@ -13,6 +14,7 @@ export default function App() {
         {activeTab === 'recibos'    && <RecibosForm />}
         {activeTab === 'reporte'    && <ReporteForm />}
         {activeTab === 'historial'  && <HistorialForm />}
+        {activeTab === 'calendario' && <CalendarioForm />}
         {activeTab === 'residentes' && <ResidentesAdmin />}
       </div>
 
@@ -50,6 +52,19 @@ export default function App() {
             <polyline points="12 6 12 12 16 14"/>
           </svg>
           <span>Historial</span>
+        </button>
+
+        <button
+          className={`nav-tab${activeTab === 'calendario' ? ' active' : ''}`}
+          onClick={() => setActiveTab('calendario')}
+        >
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+          </svg>
+          <span>Calendario</span>
         </button>
 
         <button

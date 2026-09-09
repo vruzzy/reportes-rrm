@@ -74,6 +74,25 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS visitas (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    residente_id     INTEGER,
+    residente_nombre TEXT DEFAULT '',
+    tipo             TEXT NOT NULL DEFAULT 'familiar',
+    visitante        TEXT DEFAULT '',
+    parentesco       TEXT DEFAULT '',
+    fecha            TEXT NOT NULL,
+    hora             TEXT DEFAULT '',
+    notas            TEXT DEFAULT '',
+    estado           TEXT NOT NULL DEFAULT 'pendiente',
+    recurrencia      TEXT NOT NULL DEFAULT 'ninguna',
+    dias_semana      TEXT DEFAULT '',
+    creado_en        TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (residente_id) REFERENCES residentes(id) ON DELETE SET NULL
+  )
+`);
+
 // Migraciones: agregar columnas nuevas si no existen
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_original TEXT DEFAULT ''`) } catch {}
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_editado TEXT DEFAULT ''`) } catch {}
@@ -88,5 +107,7 @@ try { db.exec(`ALTER TABLE residentes ADD COLUMN dias_asistencia INTEGER DEFAULT
 try { db.exec(`ALTER TABLE residentes ADD COLUMN horario_horas INTEGER DEFAULT 8`) } catch {}
 try { db.exec(`ALTER TABLE recibos ADD COLUMN dias_asistencia INTEGER`) } catch {}
 try { db.exec(`ALTER TABLE recibos ADD COLUMN horario_horas INTEGER`) } catch {}
+try { db.exec(`ALTER TABLE visitas ADD COLUMN recurrencia TEXT DEFAULT 'ninguna'`) } catch {}
+try { db.exec(`ALTER TABLE visitas ADD COLUMN dias_semana TEXT DEFAULT ''`) } catch {}
 
 module.exports = db;

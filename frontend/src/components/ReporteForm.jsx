@@ -303,6 +303,28 @@ export default function ReporteForm() {
 
   function isPañalSelected() { return form.cuidadosRealizados.includes('Cambio de pañal') }
 
+  /** Limpia todos los parámetros del reporte para no arrastrar datos de un residente a otro.
+   *  Conserva la fecha y el/la enfermero/a responsable (no dependen del paciente). */
+  function limpiarReporte() {
+    setForm(f => ({
+      ...emptyForm(),
+      enfermero:   f.enfermero,
+      fecha:       f.fecha,
+      horaReporte: f.horaReporte,
+    }))
+    setReporteTexto('')
+    setShowSheet(false)
+    setError('')
+    setShowVitalConfirm(false)
+  }
+
+  /** Selecciona (o deselecciona) un residente y resetea el formulario si cambió. */
+  function seleccionarResidente(r) {
+    const siguiente = selectedRes?.id === r.id ? null : r
+    if (siguiente?.id !== selectedRes?.id) limpiarReporte()
+    setSelectedRes(siguiente)
+  }
+
   async function doGenerate() {
     setShowVitalConfirm(false)
     setError('')
@@ -421,7 +443,7 @@ export default function ReporteForm() {
               key={v}
               type="button"
               className={`turn-btn${vistaRes === v ? ' active' : ''}`}
-              onClick={() => { setVistaRes(v); setSelectedRes(null) }}
+              onClick={() => { setVistaRes(v); setSelectedRes(null); limpiarReporte() }}
             >
               {l}
             </button>
@@ -453,7 +475,7 @@ export default function ReporteForm() {
                   key={r.id}
                   type="button"
                   className={`resident-card${selectedRes?.id === r.id ? ' selected' : ''}`}
-                  onClick={() => setSelectedRes(selectedRes?.id === r.id ? null : r)}
+                  onClick={() => seleccionarResidente(r)}
                 >
                   <div className="resident-avatar">{r.iniciales}</div>
                   <div className="resident-name">{r.nombre}</div>
