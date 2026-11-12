@@ -49,8 +49,8 @@
   background: var(--bg);
   color: var(--ink);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: 15px;
+  line-height: 1.5;
   font-feature-settings: 'cv11', 'tnum';
   -webkit-font-smoothing: antialiased;
 }
@@ -170,11 +170,11 @@
   background-size: 20px 20px;
 }
 .gl-topbar { display: none; }
-.gl-page { max-width: 1280px; margin: 0 auto; padding: 28px 32px 56px; animation: g-fade .18s ease-out; }
+.gl-page { max-width: 1600px; margin: 0 auto; padding: 32px 40px 64px; animation: g-fade .18s ease-out; }
 @keyframes g-fade { from { opacity: 0; } }
 
 .gl-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
-.gl-header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.015em; color: var(--ink); margin-top: 2px; }
+.gl-header h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.015em; color: var(--ink); margin-top: 2px; }
 .gp-embebido { padding: 0; max-width: 640px; }
 
 /* ── Pestañas ────────────────────────────────────────────── */
@@ -228,7 +228,7 @@
 /* ── Panel con tabla ─────────────────────────────────────── */
 .rl-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-1); }
 
-.rl-toolbar { display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.rl-toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .rl-search {
   flex: 1; min-width: 220px; max-width: 380px; display: flex; align-items: center; gap: 8px;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 0 8px 0 10px; color: var(--ink-3);
@@ -237,7 +237,7 @@
 .rl-search:hover { border-color: var(--line-h); }
 .rl-search:focus-within { border-color: var(--rose-600); box-shadow: 0 0 0 3px var(--rose-50); }
 .rl-search svg { width: 16px; height: 16px; }
-.rl-search input { flex: 1; border: none; background: none; outline: none; font: inherit; color: var(--ink); padding: 8px 0; min-width: 0; }
+.rl-search input { flex: 1; border: none; background: none; outline: none; font: inherit; color: var(--ink); padding: 10px 0; min-width: 0; }
 .rl-search input::placeholder { color: var(--ink-3); }
 .rl-search input:focus-visible { outline: none; }
 
@@ -251,7 +251,7 @@
 }
 .rl-segment button {
   position: relative; z-index: 1; border: none; background: none; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500;
-  color: var(--ink-2); padding: 5px 12px; white-space: nowrap; transition: color .12s;
+  color: var(--ink-2); padding: 7px 14px; white-space: nowrap; transition: color .12s;
 }
 .rl-segment button span { color: var(--ink-3); margin-left: 4px; }
 .rl-segment button.active { color: var(--rose); font-weight: 600; }
@@ -260,7 +260,7 @@
 .rl-tools { display: flex; gap: 6px; }
 .rl-icon-btn {
   position: relative;
-  width: 34px; height: 34px; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface);
+  width: 38px; height: 38px; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface);
   color: var(--ink-2); cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: color .12s, border-color .12s, background .12s;
 }
@@ -309,7 +309,7 @@
 .rl-btn {
   display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
   border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-  border-radius: var(--r); padding: 7px 12px; font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer;
+  border-radius: var(--r); padding: 9px 16px; font: inherit; font-size: 14.5px; font-weight: 500; cursor: pointer;
   box-shadow: var(--sh-1); transition: background .12s, border-color .12s;
 }
 .rl-btn:hover:not(:disabled) { background: var(--subtle); border-color: var(--line-h); }
@@ -324,14 +324,14 @@
 /* ── Tabla ───────────────────────────────────────────────── */
 .rl-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .rl-table th {
-  text-align: left; font-size: 11.5px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em;
-  padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--subtle); white-space: nowrap;
+  text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em;
+  padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--subtle); white-space: nowrap;
 }
 .rl-th-sort { background: none; border: none; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; padding: 0; display: inline-flex; gap: 4px; }
 .rl-th-sort:hover { color: var(--ink); }
 .rl-th-sort span { display: inline-block; transition: transform .15s; }
 .rl-th-sort span.desc { transform: rotate(180deg); }
-.rl-table td { padding: 11px 16px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+.rl-table td { padding: 16px 20px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
 .rl-table tbody tr { cursor: pointer; }
 .rl-table tbody tr:last-child td { border-bottom: none; }
 .rl-table tbody tr:last-child td:first-child { border-bottom-left-radius: var(--r-lg); }
@@ -340,13 +340,13 @@
 .rl-table tbody tr:focus-visible { outline: none; }
 .rl-table tbody tr:focus-visible td { background: var(--rose-50); }
 .rl-table td b { display: block; font-weight: 500; color: var(--ink); }
-.rl-table td span { display: block; font-size: 12.5px; color: var(--ink-2); }
+.rl-table td span { display: block; font-size: 13.5px; color: var(--ink-2); }
 .rl-table td i { font-style: normal; color: var(--ink-3); }
 .rl-mono { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12.5px; color: var(--ink-2); }
 
-.rl-person { display: flex; align-items: center; gap: 12px; min-width: 220px; }
-.rl-person strong { display: block; font-weight: 600; color: var(--ink); }
-.rl-person span { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
+.rl-person { display: flex; align-items: center; gap: 14px; min-width: 260px; }
+.rl-person strong { display: block; font-size: 16px; font-weight: 600; color: var(--ink); }
+.rl-person span { display: flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--ink-2); }
 .rl-tag-cumple {
   font-style: normal; font-size: 11.5px; font-weight: 500; color: var(--rose-600);
   background: var(--rose-50); padding: 0 6px; border-radius: 4px; line-height: 18px;
@@ -355,12 +355,12 @@
 .rl-avatar-wrap { position: relative; flex-shrink: 0; }
 .rl-avatar { border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; }
 .rl-avatar-ini { background: var(--navy-50); color: var(--navy-600); display: flex; align-items: center; justify-content: center; font-weight: 600; }
-.rl-avatar-dot { position: absolute; top: 0; right: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--rose); border: 2px solid var(--surface); }
+.rl-avatar-dot { position: absolute; top: 1px; right: 1px; width: 11px; height: 11px; border-radius: 50%; background: var(--rose); border: 2px solid var(--surface); }
 
 .rl-status {
   display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
   border: 1px solid transparent; border-radius: 4px; padding: 3px 8px;
-  font: inherit; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; cursor: pointer; transition: border-color .12s;
+  font: inherit; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; cursor: pointer; transition: border-color .12s;
 }
 .rl-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .rl-status.dentro { background: var(--green-50); color: var(--green); }
@@ -371,11 +371,11 @@
 .rl-quick { display: flex; gap: 4px; justify-content: flex-end; opacity: 0; transition: opacity .12s; }
 .rl-table tbody tr:hover .rl-quick, .rl-table tbody tr:focus-within .rl-quick { opacity: 1; }
 .rl-quick-btn {
-  width: 30px; height: 30px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface);
+  width: 36px; height: 36px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface);
   color: var(--ink-2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
   transition: color .12s, border-color .12s, background .12s;
 }
-.rl-quick-btn svg { width: 15px; height: 15px; }
+.rl-quick-btn svg { width: 17px; height: 17px; }
 .rl-quick-btn:hover { color: var(--rose); border-color: var(--line-h); background: var(--subtle); }
 
 .rl-vacio { text-align: center; padding: 56px 16px; color: var(--ink-2); display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -385,6 +385,26 @@
 .rl-skeleton { padding: 6px 16px; }
 .rl-skeleton div { height: 44px; margin: 10px 0; border-radius: var(--r); background: linear-gradient(90deg, var(--line-2) 25%, var(--subtle) 50%, var(--line-2) 75%); background-size: 200% 100%; animation: g-shimmer 1.4s infinite; }
 @keyframes g-shimmer { to { background-position: -200% 0; } }
+
+/* ── Paginación ──────────────────────────────────────────── */
+.rl-pager {
+  display: flex; align-items: center; justify-content: flex-end; gap: 20px; flex-wrap: wrap;
+  padding: 14px 16px; border-top: 1px solid var(--line);
+}
+.rl-pager-info { margin-right: auto; font-size: 13.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.rl-pager-size { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-2); }
+.rl-select { position: relative; display: inline-flex; align-items: center; }
+.rl-select select {
+  appearance: none; font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer;
+  background: var(--subtle); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 8px 34px 8px 12px; min-width: 84px; transition: border-color .12s;
+}
+.rl-select select:hover { border-color: var(--line-h); }
+.rl-select select:focus { outline: none; border-color: var(--rose); box-shadow: 0 0 0 3px var(--rose-50); }
+.rl-select svg { position: absolute; right: 10px; pointer-events: none; color: var(--ink-3); }
+.rl-pager-page { font-size: 14px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rl-pager-nav { display: flex; gap: 6px; }
+.rl-pager-nav .rl-icon-btn:hover:not(:disabled) { color: var(--rose-600); border-color: var(--rose); background: var(--rose-50); }
 
 /* ── Avisos ──────────────────────────────────────────────── */
 .rl-toasts { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 400; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
@@ -510,7 +530,9 @@
   .rl-table td { display: none; padding: 0; border: none !important; background: none !important; }
   .rl-table td:first-child, .rl-table td.rl-c-ubic { display: block; }
   .rl-table td.rl-c-acc { display: block; grid-column: 1 / -1; }
-  .rl-quick { justify-content: flex-start; padding-left: 52px; }
+  .rl-quick { justify-content: flex-start; padding-left: 62px; }
+  .rl-pager { justify-content: space-between; gap: 12px; }
+  .rl-pager-info { display: none; }
   .rl-person { min-width: 0; }
 
   .rm-modal { max-width: none; }

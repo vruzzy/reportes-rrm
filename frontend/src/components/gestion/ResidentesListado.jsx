@@ -3,6 +3,7 @@ import { gestionFetch } from './GestionApp'
 import ResidenteExpedienteModal from './ResidenteExpedienteModal'
 import {
   Plus, Search, Download, Columns3, Phone, MessageCircle, Pencil, BedDouble, DoorOpen, Cake, FileWarning, X,
+  ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ChevronsUpDown,
 } from 'lucide-react'
 
 // Columnas opcionales (Nombre, Ubicación y acciones siempre se muestran)
@@ -64,6 +65,16 @@ export function completitud(r) {
   return { pct: (checks.length - faltan.length) / checks.length, faltan }
 }
 
+const PAG_KEY = 'rrm_gestion_por_pagina'
+const OPCIONES_PAGINA = [10, 25, 50, 0] // 0 = todos
+function leerPorPagina() {
+  try {
+    const v = Number(localStorage.getItem(PAG_KEY))
+    if (OPCIONES_PAGINA.includes(v) && localStorage.getItem(PAG_KEY) !== null) return v
+  } catch {}
+  return 10
+}
+
 function leerCols() {
   try {
     const v = JSON.parse(localStorage.getItem(COLS_KEY))
@@ -95,7 +106,7 @@ function useCountUp(valor, ms = 600) {
 }
 
 // ── Piezas visuales ───────────────────────────────────────────────────────────
-export function Avatar({ r, size = 40 }) {
+export function Avatar({ r, size = 48 }) {
   const style = { width: size, height: size, fontSize: Math.round(size * 0.36) }
   if (r.foto) return <img className="rl-avatar" src={r.foto} alt="" style={style} />
   return <div className="rl-avatar rl-avatar-ini" style={style}>{r.iniciales}</div>
@@ -135,6 +146,8 @@ export default function ResidentesListado() {
   const [especial, setEspecial] = useState(null)    // null | cumple | incompletos
   const [orden, setOrden] = useState(1)
   const [cols, setCols] = useState(leerCols)
+  const [porPagina, setPorPagina] = useState(leerPorPagina)
+  const [pagina, setPagina] = useState(1)
   const [menuCols, setMenuCols] = useState(false)
   const [editando, setEditando] = useState(null)    // residente | 'nuevo' | null
   const [toasts, setToasts] = useState([])
@@ -226,6 +239,16 @@ export default function ResidentesListado() {
       .filter(r => !q || quitarAcentos(r.nombre).includes(q) || quitarAcentos(r.familiar).includes(q))
       .sort((a, b) => orden * a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }))
   }, [residentes, busqueda, ubic, especial, orden])
+
+  // ── Paginación ──
+  const paginas = porPagina ? Math.max(1, Math.ceil(filas.length / porPagina)) : 1
+  const pag = Math.min(pagina, paginas)
+  const visibles = porPagina ? filas.slice((pag - 1) * porPagina, pag * porPagina) : filas
+  useEffect(() => { setPagina(1) }, [busqueda, ubic, especial, orden, porPagina])
+  function cambiarPorPagina(v) {
+    setPorPagina(v)
+    try { localStorage.setItem(PAG_KEY, String(v)) } catch {}
+  }
 
   const ver = (id) => cols.includes(id)
   const SEGMENTOS = [
@@ -367,8 +390,8 @@ export default function ResidentesListado() {
                     <th aria-label="Acciones" />
                   </tr>
                 </thead>
-                <tbody key={`${ubic}-${especial}-${orden}`}>
-                  {filas.map((r, i) => {
+                <tbody key={`${ubic}-${especial}-${orden}-${pag}-${porPagina}`}>
+                  {visibles.map((r, i) => {
                     const tel = telefonoFamiliar(r)
                     const wa = linkWhatsApp(tel)
                     const comp = completitud(r)
@@ -430,6 +453,30 @@ export default function ResidentesListado() {
                   })}
                 </tbody>
               </table>
+            )}
+            {!cargando && filas.length > 0 && (
+              <div className="rl-pager">
+                <span className="rl-pager-info">
+                  {porPagina
+                    ? `${(pag - 1) * porPagina + 1}–${Math.min(pag * porPagina, filas.length)} de ${filas.length}`
+                    : `${filas.length} residentes`}
+                </span>
+                <label className="rl-pager-size">Filas por página
+                  <span className="rl-select">
+                    <select value={porPagina} onChange={e => cambiarPorPagina(Number(e.target.value))}>
+                      {OPCIONES_PAGINA.map(v => <option key={v} value={v}>{v || 'Todos'}</option>)}
+                    </select>
+                    <Icono d={ChevronsUpDown} size={14} />
+                  </span>
+                </label>
+                <strong className="rl-pager-page">Página {pag} de {paginas}</strong>
+                <div className="rl-pager-nav">
+                  <button className="rl-icon-btn" onClick={() => setPagina(1)} disabled={pag === 1} aria-label="Primera página"><Icono d={ChevronsLeft} /></button>
+                  <button className="rl-icon-btn" onClick={() => setPagina(pag - 1)} disabled={pag === 1} aria-label="Página anterior"><Icono d={ChevronLeft} /></button>
+                  <button className="rl-icon-btn" onClick={() => setPagina(pag + 1)} disabled={pag === paginas} aria-label="Página siguiente"><Icono d={ChevronRight} /></button>
+                  <button className="rl-icon-btn" onClick={() => setPagina(paginas)} disabled={pag === paginas} aria-label="Última página"><Icono d={ChevronsRight} /></button>
+                </div>
+              </div>
             )}
           </div>
         </>
