@@ -162,5 +162,30 @@ router.post('/logout', (req, res) => {
   }
 });
 
+// ── Recuperación de acceso ────────────────────────────────────────────────────
+// Si olvidas usuario/contraseña: define GESTION_RESET_PASSWORD (mín. 8 caracteres)
+// en las variables de Railway. Al arrancar se restablece la contraseña del usuario
+// indicado en GESTION_RESET_USER (o del primer administrador) y se cierran sus
+// sesiones. El nombre de usuario aparece en los logs. Después BORRA la variable.
+(function restablecerAcceso() {
+  const nueva = process.env.GESTION_RESET_PASSWORD;
+  if (!nueva) return;
+  if (nueva.length < 8) {
+    console.warn('[Gestión] GESTION_RESET_PASSWORD debe tener al menos 8 caracteres; no se cambió nada.');
+    return;
+  }
+  const quien = (process.env.GESTION_RESET_USER || '').trim();
+  const u = quien
+    ? db.prepare('SELECT id, usuario FROM usuarios WHERE usuario = ? COLLATE NOCASE').get([quien])
+    : db.prepare("SELECT id, usuario FROM usuarios WHERE rol = 'admin' ORDER BY id LIMIT 1").get();
+  if (!u) {
+    console.warn('[Gestión] No se encontró el usuario a restablecer.');
+    return;
+  }
+  db.prepare('UPDATE usuarios SET password_hash = ?, activo = 1 WHERE id = ?').run([hashPassword(nueva), u.id]);
+  db.prepare('DELETE FROM sesiones WHERE usuario_id = ?').run([u.id]);
+  console.log(`[Gestión] Contraseña restablecida para el usuario "${u.usuario}". Borra GESTION_RESET_PASSWORD de las variables.`);
+})();
+
 module.exports = router;
 module.exports.requireAuth = requireAuth;
