@@ -110,30 +110,16 @@ const IC = {
   editar: Pencil, casa: BedDouble, salida: DoorOpen, pastel: Cake, alerta: FileWarning, cerrar: X,
 }
 
-function Anillo({ pct }) {
-  const r = 20, c = 2 * Math.PI * r
-  const [listo, setListo] = useState(false)
-  useEffect(() => { const t = setTimeout(() => setListo(true), 150); return () => clearTimeout(t) }, [])
-  pct = listo ? pct : 0
+function Stat({ tono, etiqueta, detalle, valor, activo, onClick, i }) {
+  const n = useCountUp(valor, 700)
   return (
-    <svg className="rl-ring" viewBox="0 0 48 48" aria-hidden="true">
-      <circle cx="24" cy="24" r={r} className="rl-ring-bg" />
-      <circle cx="24" cy="24" r={r} className="rl-ring-fg" strokeDasharray={c} strokeDashoffset={c * (1 - pct)} />
-    </svg>
-  )
-}
-
-function Stat({ tono, icono, etiqueta, valor, detalle, activo, onClick, anillo }) {
-  const n = useCountUp(valor, 450)
-  return (
-    <button className={`rl-stat rl-stat-${tono}${activo ? ' active' : ''}`} onClick={onClick} aria-pressed={activo}>
-      <div className="rl-stat-top">
-        <span className="rl-stat-icon"><Icono d={icono} /></span>
-        {anillo != null && <Anillo pct={anillo} />}
+    <button className={`rl-stat rl-stat-${tono}${activo ? ' active' : ''}`} onClick={onClick}
+      aria-pressed={activo} style={{ '--i': i }}>
+      <div className="rl-stat-text">
+        <strong>{etiqueta}</strong>
+        <span>{detalle}</span>
       </div>
-      <div className="rl-stat-valor">{n}</div>
-      <div className="rl-stat-label">{etiqueta}</div>
-      <div className="rl-stat-detalle">{detalle}</div>
+      <div className="rl-stat-num" key={valor}>{n}</div>
     </button>
   )
 }
@@ -230,12 +216,6 @@ export default function ResidentesListado() {
   const total = residentes.length
   const enResidencia = residentes.filter(r => r.ubicacion !== 'fuera').length
   const fuera = total - enResidencia
-  const cumpleaneros = residentes.filter(r => cumpleEsteMes(r.fecha_nacimiento))
-  const incompletos = residentes.filter(r => completitud(r).pct < 1).length
-  const proximoCumple = cumpleaneros
-    .map(r => ({ r, dia: Number(r.fecha_nacimiento.slice(8, 10)) }))
-    .filter(x => x.dia >= new Date().getDate())
-    .sort((a, b) => a.dia - b.dia)[0]
 
   const filas = useMemo(() => {
     const q = quitarAcentos(busqueda)
@@ -289,19 +269,12 @@ export default function ResidentesListado() {
       ) : (
         <>
           <section className="rl-stats">
-            <Stat tono="b" icono={IC.casa} etiqueta="En residencia" valor={enResidencia}
-              detalle={total ? `${Math.round((enResidencia / total) * 100)}% de ocupación` : 'Sin residentes'}
-              anillo={total ? enResidencia / total : 0}
-              activo={ubic === 'residencia'} onClick={() => setUbic(u => u === 'residencia' ? 'todos' : 'residencia')} />
-            <Stat tono="a" icono={IC.salida} etiqueta="Fuera del centro" valor={fuera}
-              detalle={fuera ? 'Toca para ver quiénes' : 'Todos en casa'}
-              activo={ubic === 'fuera'} onClick={() => setUbic(u => u === 'fuera' ? 'todos' : 'fuera')} />
-            <Stat tono="b" icono={IC.pastel} etiqueta={`Cumpleaños en ${MESES[new Date().getMonth()]}`} valor={cumpleaneros.length}
-              detalle={proximoCumple ? `Próximo: ${proximoCumple.r.nombre.split(' ')[0]}, día ${proximoCumple.dia}` : cumpleaneros.length ? 'Ya pasaron este mes' : 'Ninguno este mes'}
-              activo={especial === 'cumple'} onClick={() => setEspecial(s => s === 'cumple' ? null : 'cumple')} />
-            <Stat tono="a" icono={IC.alerta} etiqueta="Expedientes incompletos" valor={incompletos}
-              detalle={incompletos ? 'Faltan datos por capturar' : '¡Todo al día!'}
-              activo={especial === 'incompletos'} onClick={() => setEspecial(s => s === 'incompletos' ? null : 'incompletos')} />
+            <Stat i={0} tono="dentro" etiqueta="En residencia" detalle="Residentes en el centro" valor={enResidencia}
+              activo={ubic === 'residencia'} onClick={() => { setEspecial(null); setUbic(u => u === 'residencia' ? 'todos' : 'residencia') }} />
+            <Stat i={1} tono="fuera" etiqueta="Fuera de la residencia" detalle="Residentes fuera del centro" valor={fuera}
+              activo={ubic === 'fuera'} onClick={() => { setEspecial(null); setUbic(u => u === 'fuera' ? 'todos' : 'fuera') }} />
+            <Stat i={2} tono="total" etiqueta="Total" detalle="Residentes registrados" valor={total}
+              activo={ubic === 'todos' && !especial} onClick={() => { setEspecial(null); setUbic('todos') }} />
           </section>
 
           <div className="rl-panel">
