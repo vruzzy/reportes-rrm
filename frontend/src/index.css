@@ -1434,3 +1434,100 @@ body {
   gap: 4px;
   flex-shrink: 0;
 }
+
+/* ============================================================
+   GESTIÓN (PRÓXIMAMENTE)
+   ============================================================ */
+
+.gp-wrap { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+.gp-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  text-align: center;
+}
+.gp-hero h2 { font-size: 18px; margin: 10px 0 6px; color: var(--text); }
+.gp-hero p  { font-size: 13px; color: var(--text-secondary); }
+
+.gp-pill {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.gp-progress {
+  height: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+.gp-progress-bar { height: 100%; background: var(--primary); transition: width 0.3s; }
+.gp-progress-label { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+.gp-list { list-style: none; display: flex; flex-direction: column; gap: 8px; padding: 0; margin: 0; }
+.gp-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.gp-item-text { display: flex; flex-direction: column; min-width: 0; }
+.gp-item-text strong { font-size: 14px; color: var(--text); }
+.gp-item-text span   { font-size: 12px; color: var(--text-secondary); }
+
+.gp-estado {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.gp-pendiente   { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+.gp-en_progreso { background: #fef3c7; color: #92400e; }
+.gp-listo       { background: #dcfce7; color: #166534; }
+
+.nav-tab { position: relative; }
+.nav-badge {
+  position: absolute;
+  top: 6px;
+  right: calc(50% - 20px);
+  width: 8px;
+  height: 8px;
+  background: var(--warning);
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+}
+
+.gp-login { text-align: left; display: flex; flex-direction: column; gap: 12px; }
+.gp-login .gp-pill { align-self: flex-start; }
+.gp-login h2 { margin: 0; }
+.gp-btn { width: 100%; margin-top: 4px; }
+.gp-logout {
+  margin-left: auto;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gp-login { animation: gp-entrada .25s ease-out; }
+@keyframes gp-entrada { from { opacity: 0; transform: translateY(6px); } }

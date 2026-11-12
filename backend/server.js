@@ -8,6 +8,7 @@ const reporteRoutes    = require('./routes/reporte');
 const recibosRoutes    = require('./routes/recibos');
 const historialRoutes  = require('./routes/historial');
 const visitasRoutes    = require('./routes/visitas');
+const authRoutes       = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -24,6 +25,8 @@ app.use('/api/residentes', residentesRoutes);
 app.use('/api/recibos',   recibosRoutes);
 app.use('/api/historial', historialRoutes);
 app.use('/api/visitas',   visitasRoutes);
+app.use('/api/auth',      authRoutes);
+app.use('/api/gestion',   require('./routes/gestion'));
 app.use('/api', reporteRoutes);
 
 // Health check

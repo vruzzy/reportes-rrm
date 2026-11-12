@@ -93,6 +93,29 @@ db.exec(`
   )
 `);
 
+// ── Gestión: usuarios y sesiones ──────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS usuarios (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario       TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    nombre        TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    rol           TEXT NOT NULL DEFAULT 'admin',
+    activo        INTEGER NOT NULL DEFAULT 1,
+    creado_en     TEXT DEFAULT (datetime('now'))
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS sesiones (
+    token_hash TEXT PRIMARY KEY,
+    usuario_id INTEGER NOT NULL,
+    expira_en  TEXT NOT NULL,
+    creado_en  TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+  )
+`);
+
 // Migraciones: agregar columnas nuevas si no existen
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_original TEXT DEFAULT ''`) } catch {}
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_editado TEXT DEFAULT ''`) } catch {}
@@ -109,5 +132,22 @@ try { db.exec(`ALTER TABLE recibos ADD COLUMN dias_asistencia INTEGER`) } catch 
 try { db.exec(`ALTER TABLE recibos ADD COLUMN horario_horas INTEGER`) } catch {}
 try { db.exec(`ALTER TABLE visitas ADD COLUMN recurrencia TEXT DEFAULT 'ninguna'`) } catch {}
 try { db.exec(`ALTER TABLE visitas ADD COLUMN dias_semana TEXT DEFAULT ''`) } catch {}
+
+// Gestión: campos extendidos del expediente del residente
+for (const col of [
+  `foto TEXT DEFAULT ''`,
+  `fecha_nacimiento TEXT DEFAULT ''`,
+  `curp TEXT DEFAULT ''`,
+  `tipo_cliente TEXT DEFAULT 'privado'`,
+  `mutualista TEXT DEFAULT 'no_posee'`,
+  `mutualista_socio TEXT DEFAULT ''`,
+  `mutualista_tel TEXT DEFAULT ''`,
+  `emergencia TEXT DEFAULT ''`,
+  `emergencia_tel TEXT DEFAULT ''`,
+  `familiar_tel TEXT DEFAULT ''`,
+  `ubicacion TEXT DEFAULT 'residencia'`,
+]) {
+  try { db.exec(`ALTER TABLE residentes ADD COLUMN ${col}`) } catch {}
+}
 
 module.exports = db;

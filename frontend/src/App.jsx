@@ -4,6 +4,7 @@ import ResidentesAdmin from './components/ResidentesAdmin'
 import RecibosForm from './components/RecibosForm'
 import HistorialForm from './components/HistorialForm'
 import CalendarioForm from './components/CalendarioForm'
+import GestionApp from './components/gestion/GestionApp'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('recibos')
@@ -16,6 +17,7 @@ export default function App() {
         {activeTab === 'historial'  && <HistorialForm />}
         {activeTab === 'calendario' && <CalendarioForm />}
         {activeTab === 'residentes' && <ResidentesAdmin />}
+        {activeTab === 'gestion'    && <GestionApp onSalir={() => setActiveTab('recibos')} />}
       </div>
 
       <nav className="bottom-nav">
@@ -78,6 +80,20 @@ export default function App() {
             <path d="M16 3.13a4 4 0 010 7.75"/>
           </svg>
           <span>Residentes</span>
+        </button>
+
+        <button
+          className={`nav-tab${activeTab === 'gestion' ? ' active' : ''}`}
+          onClick={() => setActiveTab('gestion')}
+        >
+          <span className="nav-badge" aria-hidden="true" />
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span>Gestión</span>
         </button>
       </nav>
     </div>
