@@ -39,7 +39,7 @@ const LISTOS = new Set(['listado'])
 const TITULOS = Object.fromEntries(SECCIONES.flatMap(s => s.items.map(i => [i.id, i.label])))
 
 function Icono({ icon: C }) {
-  return <C className="gl-icon" size={18} strokeWidth={1.75} aria-hidden="true" />
+  return <C className="gl-icon" size={20} strokeWidth={1.75} aria-hidden="true" />
 }
 
 function iniciales(nombre = '') {

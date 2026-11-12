@@ -107,7 +107,7 @@ function useCountUp(valor, ms = 600) {
 }
 
 // ── Piezas visuales ───────────────────────────────────────────────────────────
-export function Avatar({ r, size = 72 }) {
+export function Avatar({ r, size = 84 }) {
   const style = { width: size, height: size, fontSize: Math.round(size * 0.36) }
   if (r.foto) return <img className="rl-avatar" src={r.foto} alt="" style={style} />
   return <div className="rl-avatar rl-avatar-ini" style={style}>{r.iniciales}</div>
