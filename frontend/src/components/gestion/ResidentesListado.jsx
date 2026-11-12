@@ -8,14 +8,15 @@ import {
 
 // Columnas opcionales (Nombre, Ubicación y acciones siempre se muestran)
 const COLUMNAS = [
+  { id: 'nacimiento', label: 'Fecha de nacimiento' },
   { id: 'familiar',   label: 'Familiar' },
   { id: 'mutualista', label: 'Mutualista' },
   { id: 'emergencia', label: 'Emergencia' },
   { id: 'cliente',    label: 'Tipo de cliente' },
   { id: 'curp',       label: 'CURP' },
 ]
-const COLS_DEFECTO = ['familiar', 'mutualista', 'emergencia']
-const COLS_KEY = 'rrm_gestion_columnas_v2'
+const COLS_DEFECTO = ['nacimiento', 'familiar', 'mutualista', 'curp', 'emergencia']
+const COLS_KEY = 'rrm_gestion_columnas_v3'
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
 export const MUTUALISTA_LABEL = {
@@ -106,7 +107,7 @@ function useCountUp(valor, ms = 600) {
 }
 
 // ── Piezas visuales ───────────────────────────────────────────────────────────
-export function Avatar({ r, size = 48 }) {
+export function Avatar({ r, size = 72 }) {
   const style = { width: size, height: size, fontSize: Math.round(size * 0.36) }
   if (r.foto) return <img className="rl-avatar" src={r.foto} alt="" style={style} />
   return <div className="rl-avatar rl-avatar-ini" style={style}>{r.iniciales}</div>
@@ -381,6 +382,7 @@ export default function ResidentesListado() {
                         Nombre <span className={orden === 1 ? '' : 'desc'}>↑</span>
                       </button>
                     </th>
+                    {ver('nacimiento') && <th className="rl-c-nac">Nacimiento</th>}
                     {ver('familiar')   && <th>Familiar</th>}
                     {ver('mutualista') && <th>Mutualista</th>}
                     {ver('emergencia') && <th className="rl-c-emergencia">Emergencia</th>}
@@ -416,6 +418,11 @@ export default function ResidentesListado() {
                             </div>
                           </div>
                         </td>
+                        {ver('nacimiento') && (
+                          <td className="rl-c-nac">
+                            {r.fecha_nacimiento ? <b>{r.fecha_nacimiento.split('-').reverse().join('/')}</b> : <i>—</i>}
+                          </td>
+                        )}
                         {ver('familiar') && (
                           <td className="rl-c-familiar">
                             {r.familiar ? <><b>{r.familiar}</b>{tel && <span>{tel}</span>}</> : <i>Sin registrar</i>}
