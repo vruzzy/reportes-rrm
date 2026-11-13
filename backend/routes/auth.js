@@ -1,14 +1,18 @@
 // Autenticación para la sección Gestión.
 // Contraseñas con scrypt (módulo crypto de Node, sin dependencias nuevas).
 // Sesiones guardadas en la tabla `sesiones` como hash SHA-256 del token.
+// Invitaciones y recuperación de contraseña con enlaces de un solo uso (tabla enlaces_acceso).
 const express = require('express');
 const crypto  = require('crypto');
 const router  = express.Router();
 const db      = require('../database');
+const { permisosDe, ROLES } = require('../permisos');
+const correo  = require('../correo');
 
 const DURACION_SESION_DIAS = 7;
 const MAX_INTENTOS = 5;
 const BLOQUEO_MS   = 15 * 60 * 1000;
+const VIGENCIA = { invitacion: 7 * 86400000, recuperacion: 60 * 60000 };
 
 // ── Contraseñas ───────────────────────────────────────────────────────────────
 function hashPassword(password) {
@@ -29,6 +33,29 @@ function sha256(texto) {
   return crypto.createHash('sha256').update(texto).digest('hex');
 }
 
+function validarPassword(p) {
+  p = String(p || '');
+  if (p.length < 8) throw new Error('La contraseña debe tener al menos 8 caracteres.');
+  if (p.length > 200) throw new Error('La contraseña es demasiado larga.');
+  return p;
+}
+
+function validarEmail(e) {
+  e = String(e || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) || e.length > 120) throw new Error('Escribe un correo electrónico válido.');
+  return e;
+}
+
+// ── Usuario público (lo que ve el frontend) ───────────────────────────────────
+function usuarioPublico(u) {
+  return {
+    id: u.id, usuario: u.usuario, nombre: u.nombre, email: u.email || '',
+    rol: u.rol, rol_label: u.aprobado === 0 ? 'Por aprobar' : (ROLES[u.rol]?.label || u.rol),
+    aprobado: u.aprobado !== 0,
+    permisos: permisosDe(u),
+  };
+}
+
 // ── Sesiones ──────────────────────────────────────────────────────────────────
 function crearSesion(usuarioId) {
   const token  = crypto.randomBytes(32).toString('hex');
@@ -47,13 +74,12 @@ function leerToken(req) {
 function usuarioDeToken(token) {
   if (!token) return null;
   const fila = db.prepare(`
-    SELECT u.id, u.usuario, u.nombre, u.rol, s.expira_en
+    SELECT u.*, s.expira_en AS sesion_expira
     FROM sesiones s JOIN usuarios u ON u.id = s.usuario_id
     WHERE s.token_hash = ? AND u.activo = 1
   `).get([sha256(token)]);
-  if (!fila || fila.expira_en < new Date().toISOString()) return null;
-  const { expira_en, ...usuario } = fila;
-  return usuario;
+  if (!fila || fila.sesion_expira < new Date().toISOString()) return null;
+  return usuarioPublico(fila);
 }
 
 /** Middleware para proteger las rutas de Gestión: router.use(requireAuth) */
@@ -69,29 +95,51 @@ function requireAuth(req, res, next) {
   }
 }
 
-// ── Límite de intentos por IP (en memoria) ────────────────────────────────────
-const intentos = new Map();
-function bloqueado(ip) {
-  const r = intentos.get(ip);
-  if (!r) return false;
-  if (Date.now() - r.desde > BLOQUEO_MS) { intentos.delete(ip); return false; }
-  return r.n >= MAX_INTENTOS;
-}
-function registrarFallo(ip) {
-  const r = intentos.get(ip);
-  if (!r || Date.now() - r.desde > BLOQUEO_MS) intentos.set(ip, { n: 1, desde: Date.now() });
-  else r.n += 1;
+// ── Enlaces de un solo uso (invitación / recuperación) ────────────────────────
+function crearEnlace(usuarioId, tipo) {
+  const token = crypto.randomBytes(32).toString('base64url');
+  db.prepare('DELETE FROM enlaces_acceso WHERE usuario_id = ? AND tipo = ? AND usado = 0').run([usuarioId, tipo]);
+  db.prepare('DELETE FROM enlaces_acceso WHERE expira_en < ?').run([new Date().toISOString()]);
+  db.prepare('INSERT INTO enlaces_acceso (token_hash, usuario_id, tipo, expira_en) VALUES (?, ?, ?, ?)')
+    .run([sha256(token), usuarioId, tipo, new Date(Date.now() + VIGENCIA[tipo]).toISOString()]);
+  return token;
 }
 
-// ── Validación ────────────────────────────────────────────────────────────────
-function validarCredenciales({ usuario, password }) {
-  const u = String(usuario || '').trim();
-  const p = String(password || '');
-  if (!/^[a-zA-Z0-9._-]{3,30}$/.test(u)) {
-    throw new Error('El usuario debe tener de 3 a 30 caracteres (letras, números, punto, guion).');
-  }
-  if (p.length < 8) throw new Error('La contraseña debe tener al menos 8 caracteres.');
-  return { usuario: u, password: p };
+function buscarEnlace(token) {
+  if (!token || String(token).length > 100) return null;
+  const e = db.prepare(`
+    SELECT e.*, u.nombre, u.email, u.activo
+    FROM enlaces_acceso e JOIN usuarios u ON u.id = e.usuario_id
+    WHERE e.token_hash = ?
+  `).get([sha256(String(token))]);
+  if (!e || e.usado || !e.activo || e.expira_en < new Date().toISOString()) return null;
+  return e;
+}
+
+/** URL pública de la app, para armar los enlaces de los correos */
+function urlBase(req) {
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/+$/, '');
+  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0].trim();
+  return `${proto}://${req.get('host')}`;
+}
+
+function enlaceUrl(req, tipo, token) {
+  return `${urlBase(req)}/?gestion=${tipo}&token=${encodeURIComponent(token)}`;
+}
+
+// ── Límite de intentos por IP (en memoria) ────────────────────────────────────
+const intentos = new Map();
+function bloqueado(ip, clave = 'login') {
+  const r = intentos.get(`${clave}:${ip}`);
+  if (!r) return false;
+  if (Date.now() - r.desde > BLOQUEO_MS) { intentos.delete(`${clave}:${ip}`); return false; }
+  return r.n >= MAX_INTENTOS;
+}
+function registrarFallo(ip, clave = 'login') {
+  const k = `${clave}:${ip}`;
+  const r = intentos.get(k);
+  if (!r || Date.now() - r.desde > BLOQUEO_MS) intentos.set(k, { n: 1, desde: Date.now() });
+  else r.n += 1;
 }
 
 function contarUsuarios() {
@@ -103,7 +151,7 @@ function contarUsuarios() {
 // ¿Ya existe al menos un usuario? Si no, el frontend muestra "crear administrador".
 router.get('/estado', (req, res) => {
   try {
-    res.json({ configurado: contarUsuarios() > 0 });
+    res.json({ configurado: contarUsuarios() > 0, correo: correo.correoConfigurado() });
   } catch (err) {
     console.error('Error en /auth/estado:', err);
     res.status(500).json({ error: 'No se pudo consultar el estado.' });
@@ -114,35 +162,39 @@ router.get('/estado', (req, res) => {
 router.post('/setup', (req, res) => {
   try {
     if (contarUsuarios() > 0) return res.status(403).json({ error: 'Ya existe un administrador.' });
-    const { usuario, password } = validarCredenciales(req.body || {});
-    const nombre = String(req.body.nombre || '').trim() || usuario;
+    const usuario = String(req.body?.usuario || '').trim();
+    if (!/^[a-zA-Z0-9._-]{3,30}$/.test(usuario)) {
+      throw new Error('El usuario debe tener de 3 a 30 caracteres (letras, números, punto, guion).');
+    }
+    const password = validarPassword(req.body?.password);
+    const nombre = String(req.body.nombre || '').trim().slice(0, 80) || usuario;
     const result = db.prepare('INSERT INTO usuarios (usuario, nombre, password_hash, rol) VALUES (?, ?, ?, ?)')
       .run([usuario, nombre, hashPassword(password), 'admin']);
-    const id = Number(result.lastInsertRowid);
-    res.status(201).json({ token: crearSesion(id), usuario: { id, usuario, nombre, rol: 'admin' } });
+    const fila = db.prepare('SELECT * FROM usuarios WHERE id = ?').get([Number(result.lastInsertRowid)]);
+    res.status(201).json({ token: crearSesion(fila.id), usuario: usuarioPublico(fila) });
   } catch (err) {
     res.status(400).json({ error: err.message || 'No se pudo crear el usuario.' });
   }
 });
 
+// Entrar con usuario o correo
 router.post('/login', (req, res) => {
   const ip = req.ip;
   try {
     if (bloqueado(ip)) {
       return res.status(429).json({ error: 'Demasiados intentos. Espera 15 minutos e intenta de nuevo.' });
     }
-    const usuario  = String(req.body?.usuario || '').trim();
+    const id       = String(req.body?.usuario || '').trim();
     const password = String(req.body?.password || '');
-    const fila = db.prepare('SELECT * FROM usuarios WHERE usuario = ? AND activo = 1').get([usuario]);
+    const fila = id && db.prepare(
+      'SELECT * FROM usuarios WHERE (usuario = ? COLLATE NOCASE OR email = ? COLLATE NOCASE) AND activo = 1'
+    ).get([id, id]);
     if (!fila || !verificarPassword(password, fila.password_hash)) {
       registrarFallo(ip);
       return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
     }
-    intentos.delete(ip);
-    res.json({
-      token: crearSesion(fila.id),
-      usuario: { id: fila.id, usuario: fila.usuario, nombre: fila.nombre, rol: fila.rol },
-    });
+    intentos.delete(`login:${ip}`);
+    res.json({ token: crearSesion(fila.id), usuario: usuarioPublico(fila) });
   } catch (err) {
     console.error('Error en /auth/login:', err);
     res.status(500).json({ error: 'No se pudo iniciar sesión.' });
@@ -162,7 +214,118 @@ router.post('/logout', (req, res) => {
   }
 });
 
-// ── Recuperación de acceso ────────────────────────────────────────────────────
+// Registro abierto: la cuenta queda "por aprobar" y sin permisos hasta que el admin la acepte.
+router.post('/registro', async (req, res) => {
+  const ip = req.ip;
+  try {
+    if (bloqueado(ip, 'registro')) {
+      return res.status(429).json({ error: 'Demasiadas solicitudes. Espera 15 minutos e intenta de nuevo.' });
+    }
+    if (contarUsuarios() === 0) return res.status(400).json({ error: 'Primero hay que crear el administrador.' });
+    const b = req.body || {};
+    const nombre = String(b.nombre || '').trim().slice(0, 80);
+    if (nombre.length < 3) throw new Error('Escribe tu nombre completo.');
+    const email = validarEmail(b.email);
+    const password = validarPassword(b.password);
+    const existe = db.prepare('SELECT id FROM usuarios WHERE email = ? COLLATE NOCASE OR usuario = ? COLLATE NOCASE').get([email, email]);
+    if (existe) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo. Si olvidaste tu contraseña, usa "¿Olvidaste tu contraseña?".' });
+    registrarFallo(ip, 'registro'); // cuenta cada registro exitoso por IP
+    const r = db.prepare(`
+      INSERT INTO usuarios (usuario, nombre, email, password_hash, rol, aprobado)
+      VALUES (?, ?, ?, ?, 'enfermeria', 0)
+    `).run([email, nombre, email, hashPassword(password)]);
+    const fila = db.prepare('SELECT * FROM usuarios WHERE id = ?').get([Number(r.lastInsertRowid)]);
+    // Avisar a los administradores que tengan correo (si el envío está configurado)
+    const admins = db.prepare("SELECT email FROM usuarios WHERE rol = 'admin' AND activo = 1 AND email IS NOT NULL AND email <> ''").all();
+    for (const a of admins) {
+      correo.enviarAvisoRegistro({ para: a.email, nombre, email, enlace: urlBase(req) + '/?gestion=usuarios' }).catch(() => {});
+    }
+    res.status(201).json({ token: crearSesion(fila.id), usuario: usuarioPublico(fila) });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'No se pudo crear la cuenta.' });
+  }
+});
+
+// "Olvidé mi contraseña": siempre responde lo mismo para no revelar qué correos existen.
+router.post('/olvide', async (req, res) => {
+  const ip = req.ip;
+  const respuesta = { ok: true, mensaje: 'Si el correo está registrado, te llegará un enlace para crear una nueva contraseña.' };
+  try {
+    if (bloqueado(ip, 'olvide')) {
+      return res.status(429).json({ error: 'Demasiadas solicitudes. Espera 15 minutos e intenta de nuevo.' });
+    }
+    registrarFallo(ip, 'olvide'); // cuenta cada solicitud
+    let email;
+    try { email = validarEmail(req.body?.email); } catch (e) { return res.status(400).json({ error: e.message }); }
+    const u = db.prepare('SELECT * FROM usuarios WHERE email = ? COLLATE NOCASE AND activo = 1').get([email]);
+    if (u) {
+      const enlace = enlaceUrl(req, 'recuperacion', crearEnlace(u.id, 'recuperacion'));
+      const r = await correo.enviarRecuperacion({ para: u.email, nombre: u.nombre, enlace });
+      if (!r.enviado) console.warn(`[Gestión] Correo no configurado/enviado. Enlace de recuperación para ${u.email}: ${enlace}`);
+    }
+    res.json(respuesta);
+  } catch (err) {
+    console.error('Error en /auth/olvide:', err);
+    res.json(respuesta);
+  }
+});
+
+// Revisa un enlace (para mostrar el nombre en la pantalla de "crear contraseña")
+router.get('/enlace/:token', (req, res) => {
+  try {
+    const e = buscarEnlace(req.params.token);
+    if (!e) return res.status(410).json({ error: 'Este enlace ya no es válido. Pide uno nuevo.' });
+    res.json({ tipo: e.tipo, nombre: e.nombre, email: e.email });
+  } catch (err) {
+    console.error('Error en /auth/enlace:', err);
+    res.status(500).json({ error: 'No se pudo revisar el enlace.' });
+  }
+});
+
+// Usa el enlace: guarda la contraseña nueva e inicia sesión
+router.post('/enlace/:token', (req, res) => {
+  try {
+    const e = buscarEnlace(req.params.token);
+    if (!e) return res.status(410).json({ error: 'Este enlace ya no es válido. Pide uno nuevo.' });
+    const password = validarPassword(req.body?.password);
+    db.prepare('UPDATE usuarios SET password_hash = ? WHERE id = ?').run([hashPassword(password), e.usuario_id]);
+    db.prepare('UPDATE enlaces_acceso SET usado = 1 WHERE usuario_id = ?').run([e.usuario_id]);
+    db.prepare('DELETE FROM sesiones WHERE usuario_id = ?').run([e.usuario_id]);
+    const fila = db.prepare('SELECT * FROM usuarios WHERE id = ?').get([e.usuario_id]);
+    res.json({ token: crearSesion(fila.id), usuario: usuarioPublico(fila) });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'No se pudo guardar la contraseña.' });
+  }
+});
+
+// Mi cuenta: nombre, correo y cambio de contraseña (pide la contraseña actual)
+router.put('/mi-cuenta', requireAuth, (req, res) => {
+  try {
+    const u = db.prepare('SELECT * FROM usuarios WHERE id = ?').get([req.usuario.id]);
+    const b = req.body || {};
+    if (!verificarPassword(String(b.password_actual || ''), u.password_hash)) {
+      return res.status(400).json({ error: 'Tu contraseña actual no es correcta.' });
+    }
+    const nombre = String(b.nombre ?? u.nombre).trim().slice(0, 80) || u.nombre;
+    const email  = b.email ? validarEmail(b.email) : null;
+    if (email) {
+      const otro = db.prepare('SELECT id FROM usuarios WHERE email = ? COLLATE NOCASE AND id <> ?').get([email, u.id]);
+      if (otro) return res.status(409).json({ error: 'Ese correo ya lo usa otra cuenta.' });
+    }
+    let hash = u.password_hash;
+    if (b.password_nueva) hash = hashPassword(validarPassword(b.password_nueva));
+    db.prepare('UPDATE usuarios SET nombre = ?, email = ?, password_hash = ? WHERE id = ?').run([nombre, email, hash, u.id]);
+    if (b.password_nueva) {
+      // Cierra las demás sesiones, conserva la actual
+      db.prepare('DELETE FROM sesiones WHERE usuario_id = ? AND token_hash <> ?').run([u.id, sha256(leerToken(req))]);
+    }
+    res.json({ usuario: usuarioPublico(db.prepare('SELECT * FROM usuarios WHERE id = ?').get([u.id])) });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'No se pudo guardar.' });
+  }
+});
+
+// ── Recuperación de acceso de emergencia ──────────────────────────────────────
 // Si olvidas usuario/contraseña: define GESTION_RESET_PASSWORD (mín. 8 caracteres)
 // en las variables de Railway. Al arrancar se restablece la contraseña del usuario
 // indicado en GESTION_RESET_USER (o del primer administrador) y se cierran sus
@@ -189,3 +352,7 @@ router.post('/logout', (req, res) => {
 
 module.exports = router;
 module.exports.requireAuth = requireAuth;
+module.exports.crearEnlace = crearEnlace;
+module.exports.enlaceUrl   = enlaceUrl;
+module.exports.validarEmail = validarEmail;
+module.exports.usuarioPublico = usuarioPublico;

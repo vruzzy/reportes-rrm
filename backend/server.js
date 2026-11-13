@@ -11,12 +11,13 @@ const visitasRoutes    = require('./routes/visitas');
 const authRoutes       = require('./routes/auth');
 
 const app = express();
+app.set('trust proxy', 1); // Railway está detrás de un proxy: req.ip real para el límite de intentos
 const PORT = process.env.PORT || 3001;
 
 // Middlewares
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? false : '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
 }));
 app.use(express.json({ limit: '1mb' }));
 
@@ -26,6 +27,7 @@ app.use('/api/recibos',   recibosRoutes);
 app.use('/api/historial', historialRoutes);
 app.use('/api/visitas',   visitasRoutes);
 app.use('/api/auth',      authRoutes);
+app.use('/api/gestion/usuarios', require('./routes/usuarios'));
 app.use('/api/gestion',   require('./routes/gestion'));
 app.use('/api', reporteRoutes);
 

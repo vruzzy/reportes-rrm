@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import logo from '../../assets/logo_rrm.png'
 import GestionProximamente from './GestionProximamente'
 import ResidentesListado from './ResidentesListado'
+import GestionConfig from './GestionConfig'
 import {
   LayoutDashboard, Users, HeartPulse, History, Pill, Bath, Contact, Building2, Settings,
   ArrowLeft, LogOut, Menu, PanelLeftClose, PanelLeftOpen,
@@ -35,7 +36,7 @@ const SECCIONES = [
     ],
   },
 ]
-const LISTOS = new Set(['listado'])
+const LISTOS = new Set(['listado', 'config'])
 const TITULOS = Object.fromEntries(SECCIONES.flatMap(s => s.items.map(i => [i.id, i.label])))
 
 function Icono({ icon: C }) {
@@ -47,8 +48,14 @@ function iniciales(nombre = '') {
   return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '?'
 }
 
-export default function GestionLayout({ usuario, onLogout, onSalir }) {
-  const [vista, setVista] = useState('listado')
+export default function GestionLayout({ usuario, onUsuario, onLogout, onSalir }) {
+  const permisos = usuario?.permisos || {}
+  // Inicio y Configuración (Mi cuenta) siempre; lo demás según permisos
+  const permitido = (id) => id === 'inicio' || id === 'config' || !!permisos[id]
+  const secciones = SECCIONES
+    .map(s => ({ ...s, items: s.items.filter(i => permitido(i.id)) }))
+    .filter(s => s.items.length)
+  const [vista, setVista] = useState(() => (permitido('listado') ? 'listado' : 'inicio'))
   const [menuMovil, setMenuMovil] = useState(false)
   const rootRef = useRef(null)
   const [colapsado, setColapsado] = useState(() => {
@@ -93,7 +100,7 @@ export default function GestionLayout({ usuario, onLogout, onSalir }) {
         </button>
 
         <nav className="gl-menu">
-          {SECCIONES.map((s, i) => (
+          {secciones.map((s, i) => (
             <div key={i} className="gl-section" style={{ '--sec': i }}>
               {s.titulo && <div className="gl-section-title">{s.titulo}</div>}
               {s.items.map((item, j) => (
@@ -115,7 +122,7 @@ export default function GestionLayout({ usuario, onLogout, onSalir }) {
           <div className="gl-user-avatar">{iniciales(usuario?.nombre)}</div>
           <div className="gl-user-text">
             <strong>{usuario?.nombre}</strong>
-            <span>{usuario?.rol === 'admin' ? 'Administrador' : usuario?.rol}</span>
+            <span>{usuario?.rol_label || usuario?.rol}</span>
           </div>
           <button className="gl-icon-btn" onClick={onLogout} title="Cerrar sesión" aria-label="Cerrar sesión">
             <Icono icon={LogOut} />
@@ -135,7 +142,9 @@ export default function GestionLayout({ usuario, onLogout, onSalir }) {
 
         <div className="gl-page" key={vista}>
           {vista === 'listado'
-            ? <ResidentesListado />
+            ? <ResidentesListado puedeEditar={permisos.listado === 'editar'} />
+            : vista === 'config'
+            ? <GestionConfig usuario={usuario} onUsuario={onUsuario} />
             : (
               <>
                 <header className="gl-header"><h1>{TITULOS[vista]}</h1></header>

@@ -7,7 +7,10 @@ import CalendarioForm from './components/CalendarioForm'
 import GestionApp from './components/gestion/GestionApp'
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('recibos')
+  const [activeTab, setActiveTab] = useState(() => {
+    // Los enlaces de invitación/recuperación (?gestion=...) abren Gestión directamente
+    try { return new URLSearchParams(window.location.search).has('gestion') ? 'gestion' : 'recibos' } catch { return 'recibos' }
+  })
 
   return (
     <div className="app-wrapper">

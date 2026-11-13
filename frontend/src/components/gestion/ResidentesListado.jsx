@@ -137,7 +137,7 @@ function Stat({ tono, etiqueta, detalle, valor, activo, onClick, i }) {
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
-export default function ResidentesListado() {
+export default function ResidentesListado({ puedeEditar = true }) {
   const [pestana, setPestana] = useState('residentes')
   const [residentes, setResidentes] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -163,11 +163,11 @@ export default function ResidentesListado() {
       const escribiendo = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)
       if (escribiendo || editando || e.ctrlKey || e.metaKey || e.altKey) return
       if (e.key === '/') { e.preventDefault(); buscarRef.current?.focus() }
-      if (e.key.toLowerCase() === 'n') { e.preventDefault(); setEditando('nuevo') }
+      if (puedeEditar && e.key.toLowerCase() === 'n') { e.preventDefault(); setEditando('nuevo') }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [editando])
+  }, [editando, puedeEditar])
 
   const avisar = useCallback((texto, accion) => {
     const id = Date.now() + Math.random()
@@ -271,9 +271,11 @@ export default function ResidentesListado() {
           <p className="gl-eyebrow">Residentes</p>
           <h1>Listado de residentes</h1>
         </div>
-        <button className="rl-btn rl-btn-primary" onClick={() => setEditando('nuevo')} title="Agregar residente (tecla N)">
-          <Icono d={IC.mas} /> Agregar residente
-        </button>
+        {puedeEditar ? (
+          <button className="rl-btn rl-btn-primary" onClick={() => setEditando('nuevo')} title="Agregar residente (tecla N)">
+            <Icono d={IC.mas} /> Agregar residente
+          </button>
+        ) : <span className="rl-solo-ver">Solo lectura</span>}
       </header>
 
       <div className="rl-tabs" role="tablist">
@@ -371,7 +373,7 @@ export default function ResidentesListado() {
                 <p>{total ? 'Ningún residente coincide con los filtros.' : 'Aún no hay residentes registrados.'}</p>
                 {total
                   ? <button className="rl-btn" onClick={limpiarFiltros}>Limpiar filtros</button>
-                  : <button className="rl-btn rl-btn-primary" onClick={() => setEditando('nuevo')}>Agregar el primero</button>}
+                  : puedeEditar && <button className="rl-btn rl-btn-primary" onClick={() => setEditando('nuevo')}>Agregar el primero</button>}
               </div>
             ) : (
               <table className="rl-table">
@@ -400,8 +402,8 @@ export default function ResidentesListado() {
                     const e = edad(r.fecha_nacimiento)
                     const cumple = cumpleEsteMes(r.fecha_nacimiento)
                     return (
-                      <tr key={r.id} onClick={() => setEditando(r)} tabIndex={0}
-                        onKeyDown={ev => ev.key === 'Enter' && setEditando(r)}
+                      <tr key={r.id} onClick={() => puedeEditar && setEditando(r)} tabIndex={0} className={puedeEditar ? '' : 'rl-ro'}
+                        onKeyDown={ev => puedeEditar && ev.key === 'Enter' && setEditando(r)}
                         style={{ animationDelay: `${Math.min(i, 14) * 45}ms` }}>
                         <td>
                           <div className="rl-person">
@@ -444,7 +446,8 @@ export default function ResidentesListado() {
                         {ver('curp')    && <td className="rl-c-curp rl-mono">{r.curp || <i>—</i>}</td>}
                         <td className="rl-c-ubic">
                           <button key={r.ubicacion} className={`rl-status ${r.ubicacion === 'fuera' ? 'fuera' : 'dentro'}`}
-                            onClick={ev => cambiarUbicacion(ev, r)} data-tip="Toca para cambiar">
+                            onClick={ev => puedeEditar ? cambiarUbicacion(ev, r) : ev.stopPropagation()} disabled={!puedeEditar}
+                            data-tip={puedeEditar ? 'Toca para cambiar' : undefined}>
                             {r.ubicacion === 'fuera' ? 'Fuera del centro' : 'En residencia'}
                           </button>
                         </td>
@@ -452,7 +455,7 @@ export default function ResidentesListado() {
                           <div className="rl-quick" onClick={ev => ev.stopPropagation()}>
                             {tel && <a className="rl-quick-btn" href={`tel:${tel}`} data-tip={`Llamar a ${r.familiar || 'familiar'}`} aria-label="Llamar"><Icono d={IC.tel} /></a>}
                             {wa && <a className="rl-quick-btn wa" href={wa} target="_blank" rel="noreferrer" data-tip="WhatsApp" aria-label="WhatsApp"><Icono d={IC.chat} /></a>}
-                            <button className="rl-quick-btn" onClick={() => setEditando(r)} data-tip="Editar" aria-label="Editar"><Icono d={IC.editar} /></button>
+                            {puedeEditar && <button className="rl-quick-btn" onClick={() => setEditando(r)} data-tip="Editar" aria-label="Editar"><Icono d={IC.editar} /></button>}
                           </div>
                         </td>
                       </tr>

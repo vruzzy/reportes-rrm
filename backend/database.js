@@ -116,6 +116,24 @@ db.exec(`
   )
 `);
 
+// Gestión: correo, permisos personalizados y enlaces de un solo uso
+try { db.exec(`ALTER TABLE usuarios ADD COLUMN email TEXT COLLATE NOCASE`) } catch {}
+try { db.exec(`ALTER TABLE usuarios ADD COLUMN permisos TEXT`) } catch {}
+try { db.exec(`ALTER TABLE usuarios ADD COLUMN invitado_por INTEGER`) } catch {}
+try { db.exec(`ALTER TABLE usuarios ADD COLUMN aprobado INTEGER NOT NULL DEFAULT 1`) } catch {} // 0 = se registró solo y espera aprobación
+db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email) WHERE email IS NOT NULL AND email <> ''`);
+db.exec(`
+  CREATE TABLE IF NOT EXISTS enlaces_acceso (
+    token_hash TEXT PRIMARY KEY,
+    usuario_id INTEGER NOT NULL,
+    tipo       TEXT NOT NULL,              -- 'invitacion' | 'recuperacion'
+    expira_en  TEXT NOT NULL,
+    usado      INTEGER NOT NULL DEFAULT 0,
+    creado_en  TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+  )
+`);
+
 // Migraciones: agregar columnas nuevas si no existen
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_original TEXT DEFAULT ''`) } catch {}
 try { db.exec(`ALTER TABLE aprendizaje ADD COLUMN reporte_editado TEXT DEFAULT ''`) } catch {}

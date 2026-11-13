@@ -3,6 +3,7 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../database');
 const { requireAuth } = require('./auth');
+const { requierePermiso } = require('../permisos');
 
 router.use(requireAuth);
 
@@ -55,7 +56,7 @@ const CAMPOS = ['foto', 'fecha_nacimiento', 'curp', 'tipo_cliente', 'mutualista'
   'mutualista_tel', 'emergencia', 'emergencia_tel', 'familiar', 'familiar_tel', 'ubicacion'];
 
 // GET /api/gestion/residentes
-router.get('/residentes', (req, res) => {
+router.get('/residentes', requierePermiso('listado', 'ver'), (req, res) => {
   try {
     res.json(db.prepare('SELECT * FROM residentes ORDER BY nombre COLLATE NOCASE').all());
   } catch (err) {
@@ -65,7 +66,7 @@ router.get('/residentes', (req, res) => {
 });
 
 // POST /api/gestion/residentes — alta rápida desde Gestión
-router.post('/residentes', (req, res) => {
+router.post('/residentes', requierePermiso('listado', 'editar'), (req, res) => {
   let campos;
   try {
     const nombre = texto(req.body?.nombre);
@@ -88,7 +89,7 @@ router.post('/residentes', (req, res) => {
 });
 
 // PUT /api/gestion/residentes/:id — solo actualiza los campos del expediente
-router.put('/residentes/:id', (req, res) => {
+router.put('/residentes/:id', requierePermiso('listado', 'editar'), (req, res) => {
   const id = Number(req.params.id);
   let campos;
   try {
@@ -108,7 +109,7 @@ router.put('/residentes/:id', (req, res) => {
 });
 
 // PATCH /api/gestion/residentes/:id/ubicacion — cambio rápido en residencia / fuera
-router.patch('/residentes/:id/ubicacion', (req, res) => {
+router.patch('/residentes/:id/ubicacion', requierePermiso('listado', 'editar'), (req, res) => {
   try {
     const ubicacion = UBICACIONES.includes(req.body?.ubicacion) ? req.body.ubicacion : null;
     if (!ubicacion) return res.status(400).json({ error: 'Ubicación no válida.' });

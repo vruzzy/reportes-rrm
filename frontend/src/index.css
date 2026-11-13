@@ -1531,3 +1531,14 @@ body {
 
 .gp-login { animation: gp-entrada .25s ease-out; }
 @keyframes gp-entrada { from { opacity: 0; transform: translateY(6px); } }
+
+.gp-link {
+  align-self: center; background: none; border: none; cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--primary); padding: 6px 8px;
+}
+.gp-link:hover { text-decoration: underline; }
+.gp-ok {
+  background: #e9f7ef; color: #1f6b3f; border: 1px solid #bfe5cf;
+  border-radius: var(--radius); padding: 12px 14px; font-size: 14px; line-height: 1.5;
+}
+.gp-links { display: flex; flex-direction: column; align-items: center; gap: 2px; }
