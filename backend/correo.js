@@ -1,9 +1,15 @@
-// Envío de correos con Gmail (SMTP).
-// Variables en Railway:
-//   GMAIL_USER          → correo de la residencia, ej. refugiomendoza@gmail.com
-//   GMAIL_APP_PASSWORD  → "contraseña de aplicación" de 16 letras de Google
-// Si no están configuradas, no se envía nada y quien llama recibe { enviado: false }.
+// Envío de correos. Dos formas (se usa la primera que esté configurada):
+//
+// 1) Brevo por HTTPS (recomendado en Railway, que bloquea SMTP en planes sin Pro):
+//      BREVO_API_KEY      → clave de API de brevo.com (Settings → SMTP & API → API keys)
+//      GMAIL_USER         → remitente; debe estar verificado en Brevo (Senders)
+// 2) Gmail por SMTP (funciona en local o en hosting que permita SMTP):
+//      GMAIL_USER, GMAIL_APP_PASSWORD (contraseña de aplicación de 16 letras)
+//
+// Si nada está configurado, no se envía y quien llama recibe { enviado: false }.
 const nodemailer = require('nodemailer');
+
+const remitente = () => process.env.CORREO_REMITENTE || process.env.GMAIL_USER || '';
 
 let transporte = null;
 function obtenerTransporte() {
@@ -11,13 +17,41 @@ function obtenerTransporte() {
   const pass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
   if (!user || !pass) return null;
   if (!transporte) {
-    transporte = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
+    transporte = nodemailer.createTransport({
+      service: 'gmail', auth: { user, pass },
+      // Que nunca se quede colgado si el hosting bloquea SMTP
+      connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
+    });
   }
   return transporte;
 }
 
+function usaBrevo() {
+  return !!(process.env.BREVO_API_KEY && remitente());
+}
+
 function correoConfigurado() {
-  return !!obtenerTransporte();
+  return usaBrevo() || !!obtenerTransporte();
+}
+
+async function enviarBrevo({ para, asunto, html, texto }) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': process.env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        sender: { name: 'Refugio Mendoza', email: remitente() },
+        to: [{ email: para }],
+        subject: asunto, htmlContent: html, textContent: texto,
+      }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`Brevo respondió ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 function escapar(s) {
@@ -43,13 +77,17 @@ function plantilla({ titulo, parrafos, boton, enlace, pie }) {
 }
 
 async function enviar({ para, asunto, html, texto }) {
-  const t = obtenerTransporte();
-  if (!t) return { enviado: false, motivo: 'no_configurado' };
+  const t = usaBrevo() ? null : obtenerTransporte();
+  if (!usaBrevo() && !t) return { enviado: false, motivo: 'no_configurado' };
   try {
-    await t.sendMail({
-      from: `"Refugio Mendoza" <${process.env.GMAIL_USER}>`,
-      to: para, subject: asunto, html, text: texto,
-    });
+    if (usaBrevo()) {
+      await enviarBrevo({ para, asunto, html, texto });
+    } else {
+      await t.sendMail({
+        from: `"Refugio Mendoza" <${remitente()}>`,
+        to: para, subject: asunto, html, text: texto,
+      });
+    }
     return { enviado: true };
   } catch (err) {
     console.error('[Correo] No se pudo enviar a', para, '-', err.message);

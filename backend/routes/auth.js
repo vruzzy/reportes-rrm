@@ -260,8 +260,10 @@ router.post('/olvide', async (req, res) => {
     const u = db.prepare('SELECT * FROM usuarios WHERE email = ? COLLATE NOCASE AND activo = 1').get([email]);
     if (u) {
       const enlace = enlaceUrl(req, 'recuperacion', crearEnlace(u.id, 'recuperacion'));
-      const r = await correo.enviarRecuperacion({ para: u.email, nombre: u.nombre, enlace });
-      if (!r.enviado) console.warn(`[Gestión] Correo no configurado/enviado. Enlace de recuperación para ${u.email}: ${enlace}`);
+      // Se envía en segundo plano: la pantalla responde al instante y no revela si el correo existe
+      correo.enviarRecuperacion({ para: u.email, nombre: u.nombre, enlace })
+        .then(r => { if (!r.enviado) console.warn(`[Gestión] No se envió el correo de recuperación a ${u.email}. Enlace: ${enlace}`); })
+        .catch(() => {});
     }
     res.json(respuesta);
   } catch (err) {
