@@ -7,8 +7,9 @@ const MODULOS = [
   { nombre: 'Listado de residentes',  detalle: 'Foto, CURP, mutualista, familiar, ubicación (en residencia / fuera)', estado: 'en_progreso' },
   { nombre: 'Ficha del residente',    detalle: 'Expediente completo, contactos de emergencia y datos médicos',       estado: 'pendiente' },
   { nombre: 'Pre-admisión',           detalle: 'Prospectos e ingresos en proceso',                                  estado: 'pendiente' },
-  { nombre: 'Controles diarios',      detalle: 'Signos vitales y registro diario con historial',                    estado: 'pendiente' },
-  { nombre: 'Medicación',             detalle: 'Esquema de medicamentos y registro de administración',              estado: 'pendiente' },
+  { nombre: 'Controles diarios',      detalle: 'Signos vitales al recibir y al entregar cada turno, con historial', estado: 'listo' },
+  { nombre: 'Reportes de turno',      detalle: 'Reporte con IA dentro de Gestión, con los signos del turno incluidos', estado: 'listo' },
+  { nombre: 'Medicación',             detalle: 'Esquema de medicamentos y registro de administración',              estado: 'en_progreso' },
   { nombre: 'Gestión de baños',       detalle: 'Programación y registro de baños',                                  estado: 'pendiente' },
   { nombre: 'Personal',               detalle: 'Funcionarios, roles y turnos',                                      estado: 'pendiente' },
 ]

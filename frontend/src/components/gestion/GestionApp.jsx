@@ -86,6 +86,18 @@ export default function GestionApp({ onSalir }) {
         }
         guardarToken('')
       }
+      // Pruebas en tu computadora (npm run dev): entra directo, sin contraseña.
+      // Este bloque no existe en la versión de producción.
+      if (import.meta.env.DEV) {
+        const local = await fetch('/api/auth/acceso-local', { method: 'POST' })
+        if (local.ok) {
+          const data = await leerJson(local)
+          guardarToken(data.token)
+          setUsuario(data.usuario)
+          setFase('dentro')
+          return
+        }
+      }
       const res = await fetch('/api/auth/estado')
       if (!res.ok) throw new Error()
       const { configurado } = await leerJson(res)

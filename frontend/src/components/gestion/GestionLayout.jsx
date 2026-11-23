@@ -3,15 +3,18 @@ import logo from '../../assets/logo_rrm.png'
 import GestionProximamente from './GestionProximamente'
 import ResidentesListado from './ResidentesListado'
 import GestionConfig from './GestionConfig'
+import ControlesDiarios from './ControlesDiarios'
+import ReportesTurno from './ReportesTurno'
+import Medicacion from './Medicacion'
 import {
-  LayoutDashboard, Users, HeartPulse, History, Pill, Bath, Contact, Building2, Settings,
+  LayoutDashboard, Users, HeartPulse, ClipboardList, History, Pill, Bath, Contact, Building2, Settings,
   ArrowLeft, LogOut, Menu, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
 import './gestion.css'
 
 // Pantalla completa de Gestión: menú lateral claro (en móvil, desplegable).
 const I = {
-  inicio: LayoutDashboard, residentes: Users, controles: HeartPulse, historial: History,
+  inicio: LayoutDashboard, residentes: Users, controles: HeartPulse, reportes: ClipboardList, historial: History,
   medicacion: Pill, banos: Bath, personal: Contact, centro: Building2, config: Settings,
 }
 
@@ -22,6 +25,7 @@ const SECCIONES = [
     items: [
       { id: 'listado',    label: 'Listado',            icon: I.residentes },
       { id: 'controles',  label: 'Controles diarios',  icon: I.controles },
+      { id: 'reportes',   label: 'Reportes de turno',  icon: I.reportes },
       { id: 'historial',  label: 'Historial',          icon: I.historial },
       { id: 'medicacion', label: 'Medicación',         icon: I.medicacion },
       { id: 'banos',      label: 'Baños',              icon: I.banos },
@@ -36,7 +40,7 @@ const SECCIONES = [
     ],
   },
 ]
-const LISTOS = new Set(['listado', 'config'])
+const LISTOS = new Set(['listado', 'controles', 'reportes', 'medicacion', 'config'])
 const TITULOS = Object.fromEntries(SECCIONES.flatMap(s => s.items.map(i => [i.id, i.label])))
 
 function Icono({ icon: C }) {
@@ -143,6 +147,13 @@ export default function GestionLayout({ usuario, onUsuario, onLogout, onSalir })
         <div className="gl-page" key={vista}>
           {vista === 'listado'
             ? <ResidentesListado puedeEditar={permisos.listado === 'editar'} />
+            : vista === 'controles'
+            ? <ControlesDiarios puedeEditar={permisos.controles === 'editar'} />
+            : vista === 'reportes'
+            ? <ReportesTurno usuario={usuario} puedeEditar={permisos.reportes === 'editar'}
+                puedeCapturarSignos={permisos.controles === 'editar'} onIr={id => permitido(id) && ir(id)} />
+            : vista === 'medicacion'
+            ? <Medicacion puedeEditar={permisos.medicacion === 'editar'} />
             : vista === 'config'
             ? <GestionConfig usuario={usuario} onUsuario={onUsuario} />
             : (

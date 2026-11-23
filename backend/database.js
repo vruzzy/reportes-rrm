@@ -168,4 +168,62 @@ for (const col of [
   try { db.exec(`ALTER TABLE residentes ADD COLUMN ${col}`) } catch {}
 }
 
+// ── Gestión: controles diarios (signos vitales por turno) ────────────────────
+// Una toma por residente + fecha del turno + turno + momento (al recibir / al entregar).
+// La "fecha" es el día en que EMPIEZA el turno (el nocturno que termina de madrugada
+// sigue perteneciendo al día anterior).
+db.exec(`
+  CREATE TABLE IF NOT EXISTS controles_signos (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    residente_id   INTEGER NOT NULL,
+    fecha          TEXT NOT NULL,
+    turno          TEXT NOT NULL,              -- Matutino-Vespertino | Nocturno
+    momento        TEXT NOT NULL,              -- recibir | entregar
+    hora           TEXT DEFAULT '',
+    ta_sistolica   REAL,
+    ta_diastolica  REAL,
+    fc             REAL,
+    spo2           REAL,
+    fr             REAL,
+    temperatura    REAL,
+    glucosa        REAL,
+    notas          TEXT DEFAULT '',
+    usuario_id     INTEGER,
+    usuario_nombre TEXT DEFAULT '',
+    creado_en      TEXT DEFAULT (datetime('now')),
+    actualizado_en TEXT DEFAULT (datetime('now')),
+    UNIQUE (residente_id, fecha, turno, momento),
+    FOREIGN KEY (residente_id) REFERENCES residentes(id) ON DELETE CASCADE
+  )
+`);
+try { db.exec(`CREATE INDEX IF NOT EXISTS idx_controles_fecha ON controles_signos (fecha, turno)`) } catch {}
+
+// Micciones y evacuaciones: un registro por evento, dentro de un turno
+db.exec(`
+  CREATE TABLE IF NOT EXISTS controles_eliminacion (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    residente_id    INTEGER NOT NULL,
+    fecha           TEXT NOT NULL,
+    turno           TEXT NOT NULL,
+    tipo            TEXT NOT NULL CHECK (tipo IN ('miccion', 'evacuacion')),
+    hora            TEXT DEFAULT '',
+    caracteristicas TEXT DEFAULT '[]',
+    usuario_id      INTEGER,
+    usuario_nombre  TEXT DEFAULT '',
+    creado_en       TEXT DEFAULT (datetime('now')),
+    actualizado_en  TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (residente_id) REFERENCES residentes(id) ON DELETE CASCADE
+  )
+`);
+try { db.exec(`CREATE INDEX IF NOT EXISTS idx_eliminacion_fecha ON controles_eliminacion (fecha, turno)`) } catch {}
+
+// Reportes hechos desde Gestión: ambas tomas del turno, quién lo hizo y la hora
+try { db.exec(`ALTER TABLE reportes ADD COLUMN signos_turno TEXT DEFAULT ''`) } catch {}
+try { db.exec(`ALTER TABLE reportes ADD COLUMN enfermero TEXT DEFAULT ''`) } catch {}
+try { db.exec(`ALTER TABLE reportes ADD COLUMN hora TEXT DEFAULT ''`) } catch {}
+try { db.exec(`ALTER TABLE reportes ADD COLUMN usuario_id INTEGER`) } catch {}
+try { db.exec(`ALTER TABLE reportes ADD COLUMN datos_turno TEXT DEFAULT ''`) } catch {}
+try { db.exec(`ALTER TABLE reportes ADD COLUMN origen TEXT DEFAULT 'app'`) } catch {}
+try { db.exec(`ALTER TABLE reportes ADD COLUMN texto_original TEXT DEFAULT ''`) } catch {}
+
 module.exports = db;

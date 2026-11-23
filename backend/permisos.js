@@ -6,6 +6,7 @@
 const MODULOS = [
   { id: 'listado',    label: 'Listado de residentes' },
   { id: 'controles',  label: 'Controles diarios' },
+  { id: 'reportes',   label: 'Reportes de turno' },
   { id: 'historial',  label: 'Historial' },
   { id: 'medicacion', label: 'Medicación' },
   { id: 'banos',      label: 'Baños' },
@@ -21,15 +22,15 @@ const ROLES = {
   admin: { label: 'Administrador', permisos: TODO },
   administracion: {
     label: 'Administración',
-    permisos: { listado: 'editar', historial: 'ver', personal: 'editar', centro: 'editar' },
+    permisos: { listado: 'editar', reportes: 'ver', historial: 'ver', personal: 'editar', centro: 'editar' },
   },
   encargado_enfermeria: {
     label: 'Encargado de enfermería',
-    permisos: { listado: 'editar', controles: 'editar', historial: 'editar', medicacion: 'editar', banos: 'editar', personal: 'ver' },
+    permisos: { listado: 'editar', controles: 'editar', reportes: 'editar', historial: 'editar', medicacion: 'editar', banos: 'editar', personal: 'ver' },
   },
   enfermeria: {
     label: 'Enfermería',
-    permisos: { listado: 'ver', controles: 'editar', historial: 'ver', medicacion: 'editar', banos: 'editar' },
+    permisos: { listado: 'ver', controles: 'editar', reportes: 'editar', historial: 'ver', medicacion: 'editar', banos: 'editar' },
   },
   cocina:   { label: 'Cocina',   permisos: { listado: 'ver' } },
   limpieza: { label: 'Limpieza', permisos: { centro: 'ver' } },

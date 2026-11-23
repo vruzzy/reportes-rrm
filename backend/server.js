@@ -28,6 +28,9 @@ app.use('/api/historial', historialRoutes);
 app.use('/api/visitas',   visitasRoutes);
 app.use('/api/auth',      authRoutes);
 app.use('/api/gestion/usuarios', require('./routes/usuarios'));
+app.use('/api/gestion/controles', require('./routes/controles'));
+app.use('/api/gestion/reportes',  require('./routes/reportesGestion'));
+app.use('/api/gestion/medicacion', require('./routes/medicacion'));
 app.use('/api/gestion',   require('./routes/gestion'));
 app.use('/api', reporteRoutes);
 

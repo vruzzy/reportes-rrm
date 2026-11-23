@@ -203,6 +203,34 @@ router.post('/login', (req, res) => {
 
 router.get('/me', requireAuth, (req, res) => res.json({ usuario: req.usuario }));
 
+// ── Solo para pruebas en tu computadora: entrar sin contraseña ───────────────
+// Funciona únicamente si el servidor NO está en producción, NO corre en Railway y la
+// petición llega desde la misma computadora (127.0.0.1). Entra como el primer admin.
+const ACCESO_LOCAL = process.env.NODE_ENV !== 'production'
+  && !process.env.RAILWAY_ENVIRONMENT && !process.env.RAILWAY_PROJECT_ID && !process.env.RAILWAY_SERVICE_ID;
+
+function vieneDeEstaComputadora(req) {
+  // remoteAddress es la conexión real (no se puede falsear con cabeceras como X-Forwarded-For)
+  return ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket?.remoteAddress || '');
+}
+
+router.get('/acceso-local', (req, res) => {
+  res.json({ disponible: ACCESO_LOCAL && vieneDeEstaComputadora(req) });
+});
+
+router.post('/acceso-local', (req, res) => {
+  if (!ACCESO_LOCAL || !vieneDeEstaComputadora(req)) return res.status(404).json({ error: 'No disponible.' });
+  try {
+    const u = db.prepare("SELECT * FROM usuarios WHERE rol = 'admin' AND activo = 1 ORDER BY id LIMIT 1").get([]);
+    if (!u) return res.status(404).json({ error: 'No hay un administrador en la base local.' });
+    res.json({ token: crearSesion(u.id), usuario: usuarioPublico(u) });
+  } catch (err) {
+    console.error('Error en /auth/acceso-local:', err);
+    res.status(500).json({ error: 'No se pudo entrar.' });
+  }
+});
+if (ACCESO_LOCAL) console.log('[Gestión] Modo local: se puede entrar sin contraseña desde esta computadora.');
+
 router.post('/logout', (req, res) => {
   try {
     const token = leerToken(req);
