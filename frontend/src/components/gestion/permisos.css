@@ -1,0 +1,56 @@
+/* Permisos y notificaciones por rol (prefijo pm-) */
+.pm-root { display: flex; flex-direction: column; gap: 14px; }
+.pm-ico-inline { width: 15px; height: 15px; vertical-align: -2px; }
+.pm-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 18px; align-items: start; }
+.pm-roles { display: flex; flex-direction: column; gap: 10px; position: sticky; top: 16px; }
+.pm-roles-head { display: flex; flex-direction: column; gap: 8px; }
+.pm-roles-head .rl-btn svg { width: 16px; height: 16px; }
+.pm-filtro { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); }
+.pm-filtro svg { width: 16px; height: 16px; color: var(--ink-3); }
+.pm-filtro input { flex: 1; min-width: 0; border: none; background: none; color: var(--ink); font: inherit; font-size: 15px; outline: none; }
+.pm-roles ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pm-rol { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.pm-rol:hover { border-color: var(--line-h); }
+.pm-rol.active { border-color: var(--rose-600); background: var(--rose-50); box-shadow: inset 3px 0 0 var(--rose); }
+.pm-rol strong { font-size: 15.5px; font-weight: 600; }
+.pm-rol span { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--ink-3); }
+.pm-rol span svg { width: 13px; height: 13px; }
+
+.pm-detalle { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pm-detalle-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.pm-detalle-head h3 { margin: 0; font-size: 21px; font-weight: 700; }
+.pm-detalle-head .rl-link svg { width: 15px; height: 15px; }
+.pm-borrar { color: var(--rose-600); }
+.pm-guardar { margin-left: auto; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.pm-guardar .rl-btn svg { width: 16px; height: 16px; }
+.pm-h4 { margin: 8px 0 0; font-size: 16.5px; font-weight: 600; color: var(--ink-2); }
+
+.pm-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface, var(--bg)); }
+.pm-tabla { width: 100%; border-collapse: collapse; font-size: 15px; }
+.pm-tabla th, .pm-tabla td { padding: 10px 12px; border-bottom: 1px solid var(--line-2, var(--line)); }
+.pm-tabla thead th { font-size: 13.5px; font-weight: 600; color: var(--rose-600); text-align: center; white-space: nowrap; }
+.pm-tabla thead th svg { width: 14px; height: 14px; vertical-align: -2px; }
+.pm-tabla thead th.pm-th-sec { text-align: left; color: var(--ink-3); }
+.pm-tabla td { text-align: center; }
+.pm-tabla tbody tr:last-child td, .pm-tabla tbody tr:last-child th { border-bottom: none; }
+.pm-grupo td { text-align: left; font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); background: var(--subtle); padding: 6px 12px; }
+.pm-sec { text-align: left; font-weight: 600; color: var(--ink); min-width: 200px; }
+.pm-sec span { display: block; font-weight: 400; font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+.pm-na { color: var(--ink-3); }
+.pm-celda { display: inline-flex; align-items: center; gap: 6px; }
+.pm-tabla input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--rose); cursor: pointer; }
+.pm-tabla input[type="checkbox"]:disabled { cursor: default; opacity: .7; }
+.pm-info { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: none; border-radius: 50%; background: none; color: var(--ink-3); cursor: pointer; }
+.pm-info svg { width: 15px; height: 15px; }
+.pm-info:hover, .pm-info.on { color: var(--rose-600); background: var(--rose-50); }
+.pm-info-fila td { text-align: left; background: var(--rose-50); color: var(--ink); font-size: 14.5px; }
+
+@media (max-width: 900px) {
+  .pm-layout { grid-template-columns: 1fr; }
+  .pm-roles { position: static; }
+  .pm-roles ul { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+  .pm-rol { white-space: nowrap; }
+  .pm-guardar { margin-left: 0; }
+}
+.pm-todos .pm-sec { color: var(--ink-2); }
+.pm-todos tr:not(.pm-grupo) th, .pm-todos tr:not(.pm-grupo) td { background: rgba(255, 255, 255, .015); }

@@ -1,10 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { gestionFetch, leerJson } from './GestionApp'
-import { UserPlus, Pencil, Send, Copy, Check, X, MessageCircle, MailWarning } from 'lucide-react'
+import { UserPlus, Pencil, Send, Copy, Check, X, MessageCircle, MailWarning, UserRound, UsersRound, MapPin, ListChecks, Bath, Pill, Loader2, ShieldCheck, Clock, ClipboardList, ArrowLeft, Wallet, FolderOpen } from 'lucide-react'
+import { pedir } from './medicacionUtil'
+import { Ubicacion } from './Asistencia'
+import PermisosRoles, { MatrizPermisos } from './PermisosRoles'
+import { Turnos, ConfigNomina } from './Personal'
+import { ListaBase } from './RolDia'
+import { Asignar } from './Actividades'
+import { ProgramaBanos } from './Banos'
+import { ConfigRondas } from './Medicacion'
+import { TiposDocumento } from './ResidentePerfil'
+import './configuracion.css'
 
-// Configuración de Gestión:
-//  - Usuarios y permisos (solo administrador): invitar, asignar rol/permisos, desactivar
-//  - Mi cuenta (todos): nombre, correo y contraseña
+// Configuración del centro: mosaicos con la configuración de TODOS los módulos (no dentro de cada módulo).
+//  - Mi cuenta (todos); Usuarios y Permisos y notificaciones por rol (solo administrador)
+//  - Entradas y salidas, Turnos, Rol del día, Actividades fijas, Baños y Medicación (según permisos)
 
 const NIVEL_LABEL = { '': 'Sin acceso', ver: 'Ver', editar: 'Editar' }
 
@@ -24,35 +34,87 @@ function estadoDe(u) {
   return { id: 'on', label: 'Activo' }
 }
 
-export default function GestionConfig({ usuario, onUsuario }) {
+export default function GestionConfig({ usuario, onUsuario, permisos = {}, acciones = {}, inicial }) {
   const esAdmin = usuario?.rol === 'admin'
-  const [pestana, setPestana] = useState(esAdmin ? 'usuarios' : 'cuenta')
+  const tiene = (mod, acc) => (acciones[mod] || []).includes(acc)
+  // Configuración del centro: un mosaico por apartado; cada quien ve solo los que puede cambiar
+  const grupos = [
+    { titulo: 'Tu cuenta y el equipo', items: [
+      { id: 'cuenta', label: 'Mi cuenta', desc: 'Tu nombre, correo y contraseña', icon: UserRound },
+      esAdmin && { id: 'usuarios', label: 'Usuarios', desc: 'Invitar, aprobar, cambiar de rol y desactivar cuentas', icon: UsersRound },
+      esAdmin && { id: 'permisos', label: 'Permisos y notificaciones', desc: 'Qué puede hacer y qué avisos recibe cada rol', icon: ShieldCheck },
+    ] },
+    { titulo: 'Módulos', items: [
+      tiene('asistencia', 'editar') && { id: 'asistencia', label: 'Entradas y salidas', desc: 'Ubicación de la residencia y tolerancia de retardo', icon: MapPin },
+      tiene('nomina', 'editar') && { id: 'nomina', label: 'Nómina', desc: 'Qué se paga: horas extra (por ahora desactivadas)', icon: Wallet },
+      tiene('nomina', 'editar') && { id: 'turnos', label: 'Turnos', desc: '7 a 7, 7 a 3, NT y descanso; con qué sueldo se paga cada uno', icon: Clock },
+      tiene('actividades', 'editar') && { id: 'lista_rol', label: 'Lista del Rol del día', desc: 'Tareas y horarios de siempre', icon: ClipboardList },
+      tiene('actividades', 'editar') && { id: 'fijas', label: 'Actividades fijas', desc: 'Lo que se repite igual cada día o cada semana', icon: ListChecks },
+      tiene('banos', 'editar') && { id: 'banos', label: 'Programa de baños', desc: 'Qué días se baña cada residente y quién lo baña', icon: Bath },
+      tiene('documentos', 'editar') && { id: 'tipos_doc', label: 'Tipos de documento', desc: 'Cómo se ordenan los documentos del expediente de cada residente', icon: FolderOpen },
+      !!permisos.medicacion && { id: 'medicacion', label: 'Rondas de medicación', desc: 'Nombre y horario de cada ronda', icon: Pill },
+    ] },
+  ].map(g => ({ ...g, items: g.items.filter(Boolean) })).filter(g => g.items.length)
+  const todos = grupos.flatMap(g => g.items)
+  const [seccion, setSeccion] = useState(() => (todos.some(i => i.id === inicial) ? inicial : null))
+  const actual = todos.find(i => i.id === seccion)
+  useEffect(() => { window.scrollTo?.(0, 0) }, [seccion])
+
+  if (!actual) return (
+    <>
+      <header className="gl-header">
+        <div><p className="gl-eyebrow">Centro</p><h1>Configuración</h1></div>
+      </header>
+      {grupos.map(g => (
+        <section key={g.titulo} className="cf-grupo">
+          <h2 className="cf-grupo-tit">{g.titulo}</h2>
+          <div className="cf-tiles">
+            {g.items.map(i => (
+              <button key={i.id} className="cf-tile" onClick={() => setSeccion(i.id)}>
+                <span className="cf-tile-ico"><i.icon size={24} strokeWidth={1.75} aria-hidden="true" /></span>
+                <strong>{i.label}</strong>
+                <span>{i.desc}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
+    </>
+  )
 
   return (
     <>
-      <header className="gl-header">
-        <div>
-          <p className="gl-eyebrow">Centro</p>
-          <h1>Configuración</h1>
-        </div>
+      <button className="rl-link cf-volver" onClick={() => setSeccion(null)}><ArrowLeft size={16} /> Configuración</button>
+      <header className="gl-header cf-head">
+        <div><h1>{actual.label}</h1><p className="cf-head-desc">{actual.desc}</p></div>
       </header>
-
-      <nav className="rl-tabs" role="tablist">
-        {esAdmin && (
-          <button role="tab" aria-selected={pestana === 'usuarios'} className={pestana === 'usuarios' ? 'active' : ''} onClick={() => setPestana('usuarios')}>
-            Usuarios y permisos
-          </button>
-        )}
-        <button role="tab" aria-selected={pestana === 'cuenta'} className={pestana === 'cuenta' ? 'active' : ''} onClick={() => setPestana('cuenta')}>
-          Mi cuenta
-        </button>
-      </nav>
-
-      {pestana === 'usuarios' && esAdmin
-        ? <Usuarios yo={usuario} />
-        : <MiCuenta usuario={usuario} onUsuario={onUsuario} />}
+      <div className="cf-contenido" key={seccion}>
+        {seccion === 'usuarios' ? <Usuarios yo={usuario} />
+          : seccion === 'permisos' ? <PermisosRoles />
+          : seccion === 'asistencia' ? (<>
+            <Ubicacion />
+            <p className="ac-sutil cf-nota">Quién recibe los avisos de retardo y de "no ha marcado" se define por rol en <b>Permisos y notificaciones</b>.
+              {esAdmin && <> <button className="rl-link" onClick={() => setSeccion('permisos')}>Ir ahí</button></>}</p>
+          </>)
+          : seccion === 'turnos' ? <Turnos />
+          : seccion === 'nomina' ? <ConfigNomina />
+          : seccion === 'lista_rol' ? <ListaBase />
+          : seccion === 'fijas' ? <Asignar />
+          : seccion === 'banos' ? <ProgramaBanos puedeEditar />
+          : seccion === 'tipos_doc' ? <TiposDocumento />
+          : seccion === 'medicacion' ? <RondasMedicacion puedeEditar={tiene('prescripciones', 'editar')} />
+          : <MiCuenta usuario={usuario} onUsuario={onUsuario} />}
+      </div>
     </>
   )
+}
+
+function RondasMedicacion({ puedeEditar }) {
+  const [rondas, setRondas] = useState(null)
+  const [error, setError] = useState('')
+  useEffect(() => { pedir('rondas').then(r => setRondas(r.rondas)).catch(e => setError(e.message)) }, [])
+  if (!rondas) return error ? <div className="rl-error">{error}</div> : <div className="ac-cargando"><Loader2 className="cd-spin" /> Cargando…</div>
+  return <ConfigRondas rondas={rondas} puedeEditar={puedeEditar} onGuardado={setRondas} />
 }
 
 // ── Usuarios ──────────────────────────────────────────────────────────────────
@@ -194,7 +256,7 @@ function PanelUsuario({ u, yo, catalogo, onClose, onSaved, onDeleted }) {
   const [email, setEmail] = useState(u?.email || '')
   const [rol, setRol] = useState(u?.rol || 'enfermeria')
   // Una solicitud sin aprobar no tiene permisos todavía: arranca con los del puesto
-  const [permisos, setPermisos] = useState(() => (u && !u.por_aprobar ? u.permisos : { ...rolesPorId[u?.rol || 'enfermeria'].permisos }))
+  const [permisos, setPermisos] = useState(() => (u && !u.por_aprobar ? (u.acciones || {}) : { ...(rolesPorId[u?.rol || 'enfermeria']?.permisos || {}) }))
   const [activo, setActivo] = useState(u ? u.activo : true)
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)
@@ -208,10 +270,11 @@ function PanelUsuario({ u, yo, catalogo, onClose, onSaved, onDeleted }) {
 
   function elegirRol(r) {
     setRol(r)
-    setPermisos({ ...rolesPorId[r].permisos })
+    setPermisos({ ...(rolesPorId[r]?.permisos || {}) })
   }
 
-  const igualAlRol = JSON.stringify(Object.entries(permisos).sort()) === JSON.stringify(Object.entries(rolesPorId[rol].permisos).sort())
+  const canon = (p) => JSON.stringify(Object.keys(p || {}).sort().map(k => [k, [...(p[k] || [])].sort()]))
+  const igualAlRol = canon(permisos) === canon(rolesPorId[rol]?.permisos)
 
   async function pedir(url, opciones) {
     setError('')
@@ -301,22 +364,10 @@ function PanelUsuario({ u, yo, catalogo, onClose, onSaved, onDeleted }) {
             <p className="cf-hint">El administrador tiene acceso completo a todo, incluida la administración de usuarios.</p>
           ) : (
             <div className="cf-permisos">
-              {catalogo.modulos.map(m => (
-                <div key={m.id} className="cf-permiso">
-                  <span>{m.label}</span>
-                  <div className="cf-niveles" role="radiogroup" aria-label={m.label}>
-                    {['', 'ver', 'editar'].map(n => (
-                      <button type="button" key={n} role="radio" aria-checked={(permisos[m.id] || '') === n}
-                        className={`cf-nivel cf-nivel-${n || 'no'}${(permisos[m.id] || '') === n ? ' active' : ''}`}
-                        onClick={() => setPermisos(p => { const c = { ...p }; if (n) c[m.id] = n; else delete c[m.id]; return c })}>
-                        {NIVEL_LABEL[n]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              <p className="cf-hint">Salen marcados los permisos de su rol. Si cambias algo, solo aplica a esta persona.</p>
+              <MatrizPermisos modulos={catalogo.modulos} acciones={catalogo.acciones || ['ver', 'crear', 'editar', 'eliminar']} valor={permisos} onChange={setPermisos} />
               {!igualAlRol && (
-                <button type="button" className="rl-link cf-reset" onClick={() => setPermisos({ ...rolesPorId[rol].permisos })}>
+                <button type="button" className="rl-link cf-reset" onClick={() => setPermisos({ ...(rolesPorId[rol]?.permisos || {}) })}>
                   Volver a los permisos del puesto
                 </button>
               )}

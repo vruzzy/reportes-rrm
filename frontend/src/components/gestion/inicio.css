@@ -1,0 +1,72 @@
+/* Inicio (prefijo in-) */
+.in-root { max-width: 1280px; }
+.in-head { margin-bottom: 18px; }
+.in-head h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+.in-head span { display: block; margin-top: 4px; font-size: 16px; color: var(--ink-2); }
+.in-sec-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 12px; }
+.in-sec-head .ac-h2 { margin: 0; }
+.in-ver { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
+.in-ver svg { width: 15px; height: 15px; }
+.in-nota { display: flex; align-items: center; gap: 5px; margin: 12px 0 0; }
+
+.in-semana-nav { display: flex; align-items: center; gap: 4px; margin-left: auto; font-size: 15px; color: var(--ink-2); }
+.in-semana-nav > span { min-width: 120px; text-align: center; }
+.in-semana { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.in-dia {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px; text-align: center;
+  border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--bg); min-width: 0;
+}
+.in-dia-nom { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
+.in-dia-num { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+.in-dia-hora { font-size: 15px; font-weight: 600; color: var(--ink-3); margin-top: 4px; overflow-wrap: anywhere; }
+.in-dia.trabaja .in-dia-hora { color: var(--rose-600); }
+.in-dia.descansa .in-dia-hora { color: var(--ink-3); font-weight: 500; }
+.in-dia-avance { font-size: 13px; color: var(--ink-2); background: var(--subtle); border-radius: 999px; padding: 1px 8px; margin-top: 4px; }
+.in-dia-avance.completo { color: var(--green); background: var(--green-50); }
+.in-dia.hoy { border-color: var(--rose-600); box-shadow: inset 0 0 0 1px var(--rose-600); }
+.in-dia.hoy .in-dia-nom { color: var(--rose-600); }
+.in-dia.pasado { opacity: .7; }
+.in-dia.falta .in-dia-hora { color: var(--rose-600); }
+
+.in-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.in-col { display: flex; flex-direction: column; }
+.in-hoy .ac-avance { margin-bottom: 8px; }
+.in-felicita { margin: 10px 0 0; }
+.in-tareas { list-style: none; margin: 0; padding: 0; }
+.in-tareas li { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line-2); font-size: 16.5px; }
+.in-tareas li:last-child { border-bottom: none; }
+.in-tareas li > span { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.in-tareas li em { font-style: normal; display: inline-flex; align-items: center; gap: 3px; font-size: 13.5px; color: var(--ink-3); }
+.in-tareas li em svg { width: 13px; height: 13px; }
+.in-tareas li.resaltada > span { color: var(--rose-600); font-weight: 600; }
+.in-tareas .ac-check { width: 30px; height: 30px; }
+.in-bano-ico { flex-shrink: 0; width: 30px; height: 30px; display: inline-flex !important; align-items: center; justify-content: center; flex: 0 0 30px !important; }
+.in-bano-ico svg { width: 18px; height: 18px; color: #4a90c8; }
+.in-mas { justify-content: flex-start; }
+.in-chip { cursor: default; }
+
+.in-equipo { list-style: none; margin: 0; padding: 0; }
+.in-equipo li { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line-2); }
+.in-equipo li:last-child { border-bottom: none; }
+.in-eq-nom { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.in-eq-nom strong { font-size: 15.5px; font-weight: 600; }
+.in-eq-nom span { font-size: 13.5px; color: var(--ink-3); }
+.in-eq-av { width: 110px; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--ink-2); text-align: right; }
+.in-eq-av.completo { color: var(--green); }
+.in-eq-av.completo .cd-barra i { background: var(--green); }
+.in-accesos { display: flex; flex-wrap: wrap; gap: 8px; }
+.in-accesos .rl-btn svg { width: 16px; height: 16px; }
+
+.in-roadmap-btn { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0 12px; background: none; border: none; color: var(--ink-3); font: inherit; font-size: 15px; cursor: pointer; padding: 4px; }
+.in-roadmap-btn:hover { color: var(--ink); }
+.in-roadmap-btn svg { width: 16px; height: 16px; transition: transform .15s; }
+.in-roadmap-btn svg.girado { transform: rotate(180deg); }
+
+@media (max-width: 900px) {
+  .in-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .in-head h1 { font-size: 23px; }
+  .in-semana { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .in-semana-nav { margin-left: 0; width: 100%; justify-content: space-between; }
+}

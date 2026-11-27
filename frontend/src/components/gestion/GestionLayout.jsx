@@ -6,16 +6,22 @@ import GestionConfig from './GestionConfig'
 import ControlesDiarios from './ControlesDiarios'
 import ReportesTurno from './ReportesTurno'
 import Medicacion from './Medicacion'
+import Actividades from './Actividades'
+import Banos from './Banos'
+import Inicio from './Inicio'
+import Personal from './Personal'
+import Asistencia from './Asistencia'
+import CampanaAvisos from './Avisos'
 import {
   LayoutDashboard, Users, HeartPulse, ClipboardList, History, Pill, Bath, Contact, Building2, Settings,
-  ArrowLeft, LogOut, Menu, PanelLeftClose, PanelLeftOpen,
+  ArrowLeft, LogOut, ListChecks, Menu, PanelLeftClose, PanelLeftOpen, MapPin,
 } from 'lucide-react'
 import './gestion.css'
 
 // Pantalla completa de Gestión: menú lateral claro (en móvil, desplegable).
 const I = {
   inicio: LayoutDashboard, residentes: Users, controles: HeartPulse, reportes: ClipboardList, historial: History,
-  medicacion: Pill, banos: Bath, personal: Contact, centro: Building2, config: Settings,
+  medicacion: Pill, banos: Bath, actividades: ListChecks, personal: Contact, centro: Building2, config: Settings,
 }
 
 const SECCIONES = [
@@ -28,19 +34,26 @@ const SECCIONES = [
       { id: 'reportes',   label: 'Reportes de turno',  icon: I.reportes },
       { id: 'historial',  label: 'Historial',          icon: I.historial },
       { id: 'medicacion', label: 'Medicación',         icon: I.medicacion },
-      { id: 'banos',      label: 'Baños',              icon: I.banos },
+    ],
+  },
+  {
+    titulo: 'Actividades',
+    items: [
+      { id: 'asistencia',  label: 'Entradas y salidas', icon: MapPin },
+      { id: 'actividades', label: 'Mis actividades', icon: I.actividades },
+      { id: 'banos',       label: 'Baños',           icon: I.banos },
     ],
   },
   {
     titulo: 'Centro',
     items: [
-      { id: 'personal', label: 'Personal',      icon: I.personal },
+      { id: 'personal', label: 'Personal y horarios', icon: I.personal },
       { id: 'centro',   label: 'Instalaciones', icon: I.centro },
       { id: 'config',   label: 'Configuración', icon: I.config },
     ],
   },
 ]
-const LISTOS = new Set(['listado', 'controles', 'reportes', 'medicacion', 'config'])
+const LISTOS = new Set(['listado', 'controles', 'reportes', 'medicacion', 'actividades', 'asistencia', 'banos', 'personal', 'config'])
 const TITULOS = Object.fromEntries(SECCIONES.flatMap(s => s.items.map(i => [i.id, i.label])))
 
 function Icono({ icon: C }) {
@@ -54,14 +67,27 @@ function iniciales(nombre = '') {
 
 export default function GestionLayout({ usuario, onUsuario, onLogout, onSalir }) {
   const permisos = usuario?.permisos || {}
-  // Inicio y Configuración (Mi cuenta) siempre; lo demás según permisos
-  const permitido = (id) => id === 'inicio' || id === 'config' || !!permisos[id]
+  const acciones = usuario?.acciones || {}
+  const tiene = (mod, acc) => (acciones[mod] || []).includes(acc)
+  // Inicio, Mis actividades y Configuración (Mi cuenta) siempre; lo demás según permisos
+  const permitido = (id) => id === 'inicio' || id === 'config' || id === 'actividades' || id === 'asistencia' || !!permisos[id]
   const secciones = SECCIONES
     .map(s => ({ ...s, items: s.items.filter(i => permitido(i.id)) }))
     .filter(s => s.items.length)
-  const [vista, setVista] = useState(() => (permitido('listado') ? 'listado' : 'inicio'))
+  const [vista, setVista] = useState('inicio')
+  const [subVista, setSubVista] = useState(null)   // pestaña con la que se abre un módulo desde Inicio
   const [menuMovil, setMenuMovil] = useState(false)
   const rootRef = useRef(null)
+  // Una sola campanita: en la barra lateral (computadora) o arriba (teléfono)
+  const consulta = '(max-width: 860px)'
+  const [movil, setMovil] = useState(() => window.matchMedia?.(consulta).matches || false)
+  useEffect(() => {
+    const m = window.matchMedia?.(consulta)
+    if (!m) return
+    const f = () => setMovil(m.matches)
+    m.addEventListener?.('change', f)
+    return () => m.removeEventListener?.('change', f)
+  }, [])
   const [colapsado, setColapsado] = useState(() => {
     try { return localStorage.getItem('rrm_gestion_sidebar') === 'colapsado' } catch { return false }
   })
@@ -81,8 +107,9 @@ export default function GestionLayout({ usuario, onUsuario, onLogout, onSalir })
   }, [])
 
 
-  function ir(id) {
+  function ir(id, sub = null) {
     setVista(id)
+    setSubVista(sub)
     setMenuMovil(false)
   }
 
@@ -128,6 +155,7 @@ export default function GestionLayout({ usuario, onUsuario, onLogout, onSalir })
             <strong>{usuario?.nombre}</strong>
             <span>{usuario?.rol_label || usuario?.rol}</span>
           </div>
+          {!movil && <CampanaAvisos className="gl-campana-lateral" onIr={(id, sub) => permitido(id) && ir(id, sub)} />}
           <button className="gl-icon-btn" onClick={onLogout} title="Cerrar sesión" aria-label="Cerrar sesión">
             <Icono icon={LogOut} />
           </button>
@@ -142,20 +170,31 @@ export default function GestionLayout({ usuario, onUsuario, onLogout, onSalir })
             <Icono icon={Menu} />
           </button>
           <strong>{TITULOS[vista]}</strong>
+          {movil && <CampanaAvisos className="gl-campana-movil" onIr={(id, sub) => permitido(id) && ir(id, sub)} />}
         </div>
 
         <div className="gl-page" key={vista}>
-          {vista === 'listado'
-            ? <ResidentesListado puedeEditar={permisos.listado === 'editar'} />
+          {vista === 'inicio'
+            ? <Inicio usuario={usuario} permisos={permisos} onIr={(id, sub) => permitido(id) && ir(id, sub)} />
+            : vista === 'listado'
+            ? <ResidentesListado puedeEditar={tiene('listado', 'editar')} puedeCrear={tiene('listado', 'crear')} permisos={permisos} acciones={acciones} />
             : vista === 'controles'
-            ? <ControlesDiarios puedeEditar={permisos.controles === 'editar'} />
+            ? <ControlesDiarios puedeEditar={permisos.controles === 'editar'} puedeEliminar={tiene('controles', 'eliminar')} />
             : vista === 'reportes'
-            ? <ReportesTurno usuario={usuario} puedeEditar={permisos.reportes === 'editar'}
+            ? <ReportesTurno usuario={usuario} puedeEditar={permisos.reportes === 'editar'} puedeEliminar={tiene('reportes', 'eliminar')}
                 puedeCapturarSignos={permisos.controles === 'editar'} onIr={id => permitido(id) && ir(id)} />
             : vista === 'medicacion'
             ? <Medicacion puedeEditar={permisos.medicacion === 'editar'} />
+            : vista === 'actividades'
+            ? <Actividades usuario={usuario} permisos={permisos} inicial={subVista} />
+            : vista === 'asistencia'
+            ? <Asistencia permisos={permisos} acciones={acciones} inicial={subVista} />
+            : vista === 'personal'
+            ? <Personal permisos={permisos} acciones={acciones} />
+            : vista === 'banos'
+            ? <Banos puedeEditar={permisos.banos === 'editar'} />
             : vista === 'config'
-            ? <GestionConfig usuario={usuario} onUsuario={onUsuario} />
+            ? <GestionConfig usuario={usuario} onUsuario={onUsuario} permisos={permisos} acciones={acciones} inicial={subVista} />
             : (
               <>
                 <header className="gl-header"><h1>{TITULOS[vista]}</h1></header>

@@ -93,7 +93,7 @@ function textoParaCopiar(rep) {
   return filas.length ? `${rep.texto}\n\nSignos vitales\n${filas.join('\n')}` : rep.texto
 }
 
-export default function ReportesTurno({ usuario, puedeEditar, puedeCapturarSignos, onIr }) {
+export default function ReportesTurno({ usuario, puedeEditar, puedeEliminar = true, puedeCapturarSignos, onIr }) {
   const inicial = turnoActual()
   const [fecha, setFecha] = useState(inicial.fecha)
   const [turno, setTurno] = useState(inicial.turno)
@@ -183,7 +183,7 @@ export default function ReportesTurno({ usuario, puedeEditar, puedeCapturarSigno
 
       {pestana === 'lista' ? (
         abierto ? (
-          <ReporteVista reporte={abierto} residente={residenteDe(abierto)} puedeEditar={puedeEditar}
+          <ReporteVista reporte={abierto} residente={residenteDe(abierto)} puedeEditar={puedeEditar} puedeEliminar={puedeEliminar}
             onVolver={() => setAbierto(null)} onActualizar={alActualizar} onBorrar={alBorrar} />
         ) : (
           <ListaReportes reportes={reportes} residentes={residentes} cargando={cargando} turno={turno} fecha={fecha} onAbrir={setAbierto} />
@@ -227,7 +227,7 @@ export default function ReportesTurno({ usuario, puedeEditar, puedeCapturarSigno
                 <p>Elige un residente para hacer su reporte del {TURNO_LABEL[turno] === 'Noche' ? 'turno de la noche' : 'turno de la mañana'}.</p>
               </div>
             ) : abierto && abierto.residente_id === sel.id ? (
-              <ReporteVista reporte={abierto} residente={sel} puedeEditar={puedeEditar}
+              <ReporteVista reporte={abierto} residente={sel} puedeEditar={puedeEditar} puedeEliminar={puedeEliminar}
                 onVolver={() => setAbierto(null)} onActualizar={alActualizar} onBorrar={alBorrar} nuevoTexto="Hacer otro reporte" />
             ) : (
               <FormularioReporte key={`${sel.id}-${fecha}-${turno}`} residente={sel} fecha={fecha} turno={turno} usuario={usuario}
@@ -517,7 +517,7 @@ function FormularioReporte({ residente, fecha, turno, usuario, tomas, eventos, e
 }
 
 // ── Reporte generado / guardado ───────────────────────────────────────────────
-function ReporteVista({ reporte, residente, puedeEditar, onVolver, onActualizar, onBorrar, nuevoTexto = 'Volver' }) {
+function ReporteVista({ reporte, residente, puedeEditar, puedeEliminar = true, onVolver, onActualizar, onBorrar, nuevoTexto = 'Volver' }) {
   const [texto, setTexto] = useState(reporte.texto)
   const [editando, setEditando] = useState(false)
   const [aviso, setAviso] = useState('')
@@ -629,7 +629,7 @@ function ReporteVista({ reporte, residente, puedeEditar, onVolver, onActualizar,
 
       <div className="rt-acciones">
         <button className="rl-btn" onClick={onVolver}>{nuevoTexto}</button>
-        {puedeEditar && !confirmarBorrar && (
+        {puedeEliminar && !confirmarBorrar && (
           <button className="rl-btn rt-borrar" onClick={() => setConfirmarBorrar(true)} disabled={ocupado}><Trash2 /> Borrar</button>
         )}
         {confirmarBorrar && (

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { gestionFetch, leerJson } from './GestionApp'
 import { ELIM, aVigilar, horaLocal, cuentaTexto } from './signosVitales'
 import { Plus, Check, Trash2, Loader2, X, Droplet, Circle } from 'lucide-react'
@@ -9,7 +10,7 @@ import { Plus, Check, Trash2, Loader2, X, Droplet, Circle } from 'lucide-react'
 const ICONO = { miccion: Droplet, evacuacion: Circle }
 
 /** Lista de registros de un tipo, con botón para agregar. */
-export function RegistrosTipo({ tipo, residente, fecha, turno, eventos, puedeEditar, onCambio }) {
+export function RegistrosTipo({ tipo, residente, fecha, turno, eventos, puedeEditar, puedeEliminar = true, onCambio }) {
   const [editando, setEditando] = useState(null)   // evento abierto en el diálogo
   const [agregando, setAgregando] = useState(false)
   const [error, setError] = useState('')
@@ -59,7 +60,7 @@ export function RegistrosTipo({ tipo, residente, fecha, turno, eventos, puedeEdi
       </div>
       {error && <span className="rt-error">{error}</span>}
       {editando && (
-        <DialogoRegistro evento={editando} numero={eventos.findIndex(e => e.id === editando.id) + 1} residente={residente}
+        <DialogoRegistro puedeEliminar={puedeEliminar} evento={editando} numero={eventos.findIndex(e => e.id === editando.id) + 1} residente={residente}
           onCerrar={() => setEditando(null)}
           onGuardado={(ev, borrado) => { onCambio(ev, borrado); setEditando(null) }} />
       )}
@@ -68,7 +69,7 @@ export function RegistrosTipo({ tipo, residente, fecha, turno, eventos, puedeEdi
 }
 
 /** Diálogo para marcar características, corregir la hora o borrar el registro. */
-function DialogoRegistro({ evento, numero, residente, onCerrar, onGuardado }) {
+function DialogoRegistro({ evento, numero, residente, puedeEliminar = true, onCerrar, onGuardado }) {
   const t = ELIM[evento.tipo]
   const [carac, setCarac] = useState(evento.caracteristicas || [])
   const [hora, setHora] = useState(evento.hora || horaLocal())
@@ -85,6 +86,10 @@ function DialogoRegistro({ evento, numero, residente, onCerrar, onGuardado }) {
   const toggle = (o) => setCarac(c => (c.includes(o) ? c.filter(x => x !== o) : [...c, o]))
 
   async function guardar() {
+    // Sin cambios: ya está guardado (se guardó al tocar "+"), solo se cierra.
+    const igual = hora === (evento.hora || '') &&
+      carac.length === (evento.caracteristicas || []).length && carac.every(c => evento.caracteristicas.includes(c))
+    if (igual) return onCerrar()
     setOcupado('guardar'); setError('')
     try {
       const res = await gestionFetch(`/api/gestion/controles/eliminacion/${evento.id}`, {
@@ -93,7 +98,11 @@ function DialogoRegistro({ evento, numero, residente, onCerrar, onGuardado }) {
       const d = await leerJson(res)
       if (!res.ok) throw new Error(d.error || 'No se pudo guardar.')
       onGuardado(d, false)
-    } catch (e) { setError(e.message); setOcupado('') }
+    } catch (e) {
+      setError(e instanceof TypeError || /fetch|network/i.test(e.message)
+        ? 'No hay conexión con el servidor. Revisa el internet e intenta otra vez.' : e.message)
+      setOcupado('')
+    }
   }
 
   async function borrar() {
@@ -106,7 +115,8 @@ function DialogoRegistro({ evento, numero, residente, onCerrar, onGuardado }) {
     } catch (e) { setError(e.message); setOcupado('') }
   }
 
-  return (
+  // Se dibuja fuera de la tabla (en la raíz de Gestión) para que ninguna fila quede encima.
+  return createPortal(
     <div className="rm-overlay el-overlay" onClick={onCerrar}>
       <div className="el-dialogo" role="dialog" aria-label={`${t.corto} ${numero} de ${residente.nombre}`} onClick={e => e.stopPropagation()}>
         <header>
@@ -138,14 +148,15 @@ function DialogoRegistro({ evento, numero, residente, onCerrar, onGuardado }) {
               </button>
             </span>
           ) : (
-            <button className="rl-link el-link-borrar" onClick={() => setConfirmarBorrar(true)} disabled={!!ocupado}><Trash2 size={15} /> Borrar</button>
+            puedeEliminar && <button className="rl-link el-link-borrar" onClick={() => setConfirmarBorrar(true)} disabled={!!ocupado}><Trash2 size={15} /> Borrar</button>
           )}
-          <button className="rl-btn rl-btn-primary" onClick={guardar} disabled={!!ocupado}>
+          <button type="button" className="rl-btn rl-btn-primary" onClick={guardar} disabled={!!ocupado}>
             {ocupado === 'guardar' ? <Loader2 className="cd-spin" /> : <Check />} Listo
           </button>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.querySelector('.gl-root') || document.body
   )
 }
 

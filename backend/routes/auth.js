@@ -6,7 +6,7 @@ const express = require('express');
 const crypto  = require('crypto');
 const router  = express.Router();
 const db      = require('../database');
-const { permisosDe, ROLES } = require('../permisos');
+const { permisosDe, legado, etiquetasRoles, destinatariosDe } = require('../permisos');
 const correo  = require('../correo');
 
 const DURACION_SESION_DIAS = 7;
@@ -48,11 +48,13 @@ function validarEmail(e) {
 
 // ── Usuario público (lo que ve el frontend) ───────────────────────────────────
 function usuarioPublico(u) {
+  const acciones = permisosDe(u);
   return {
     id: u.id, usuario: u.usuario, nombre: u.nombre, email: u.email || '',
-    rol: u.rol, rol_label: u.aprobado === 0 ? 'Por aprobar' : (ROLES[u.rol]?.label || u.rol),
+    rol: u.rol, rol_label: u.aprobado === 0 ? 'Por aprobar' : (etiquetasRoles()[u.rol] || u.rol),
     aprobado: u.aprobado !== 0,
-    permisos: permisosDe(u),
+    permisos: legado(acciones),   // 'ver' | 'editar' por sección (pantallas que aún no usan el detalle)
+    acciones,                     // { seccion: ['ver','crear','editar','eliminar'] }
   };
 }
 
@@ -263,11 +265,17 @@ router.post('/registro', async (req, res) => {
       VALUES (?, ?, ?, ?, 'enfermeria', 0)
     `).run([email, nombre, email, hashPassword(password)]);
     const fila = db.prepare('SELECT * FROM usuarios WHERE id = ?').get([Number(r.lastInsertRowid)]);
-    // Avisar a los administradores que tengan correo (si el envío está configurado)
-    const admins = db.prepare("SELECT email FROM usuarios WHERE rol = 'admin' AND activo = 1 AND email IS NOT NULL AND email <> ''").all();
-    for (const a of admins) {
-      correo.enviarAvisoRegistro({ para: a.email, nombre, email, enlace: urlBase(req) + '/?gestion=usuarios' }).catch(() => {});
-    }
+    // Avisar a quien tenga activado "Solicitud de cuenta nueva" en su rol (campanita y/o correo)
+    try {
+      const quienes = destinatariosDe('solicitud_cuenta');
+      for (const a of quienes.filter(x => x.correo && x.email)) {
+        correo.enviarAvisoRegistro({ para: a.email, nombre, email, enlace: urlBase(req) + '/?gestion=usuarios' }).catch(() => {});
+      }
+      require('./avisos').crearAvisos({
+        usuarios: quienes.filter(x => x.campana).map(x => x.id), tipo: 'solicitud_cuenta', titulo: `${nombre} pidió una cuenta`,
+        texto: `Con el correo ${email}. Apruébala o recházala en Configuración → Usuarios y permisos.`, vista: 'config', sub: 'usuarios', clave: `solicitud:${fila.id}`,
+      });
+    } catch (e) { console.error('Aviso de solicitud', e) }
     res.status(201).json({ token: crearSesion(fila.id), usuario: usuarioPublico(fila) });
   } catch (err) {
     res.status(400).json({ error: err.message || 'No se pudo crear la cuenta.' });

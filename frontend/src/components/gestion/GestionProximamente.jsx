@@ -10,8 +10,11 @@ const MODULOS = [
   { nombre: 'Controles diarios',      detalle: 'Signos vitales al recibir y al entregar cada turno, con historial', estado: 'listo' },
   { nombre: 'Reportes de turno',      detalle: 'Reporte con IA dentro de Gestión, con los signos del turno incluidos', estado: 'listo' },
   { nombre: 'Medicación',             detalle: 'Esquema de medicamentos y registro de administración',              estado: 'en_progreso' },
-  { nombre: 'Gestión de baños',       detalle: 'Programación y registro de baños',                                  estado: 'pendiente' },
-  { nombre: 'Personal',               detalle: 'Funcionarios, roles y turnos',                                      estado: 'pendiente' },
+  { nombre: 'Mis actividades',        detalle: 'Actividades del personal que se repiten solas, con monitoreo',         estado: 'listo' },
+  { nombre: 'Rol del día',            detalle: 'La hoja diaria de horarios, residentes y tareas, sin Word ni WhatsApp', estado: 'listo' },
+  { nombre: 'Inicio',                 detalle: 'Tu semana, lo que te toca hoy y cómo va el equipo',                  estado: 'listo' },
+  { nombre: 'Gestión de baños',       detalle: 'Días de baño por residente, quién lo baña y cómo estuvo la piel',     estado: 'listo' },
+  { nombre: 'Personal y horarios',    detalle: 'Perfiles, horario semanal, faltas y coberturas, nómina con historial', estado: 'listo' },
 ]
 
 const ETIQUETA = { pendiente: 'Pendiente', en_progreso: 'En progreso', listo: 'Listo' }

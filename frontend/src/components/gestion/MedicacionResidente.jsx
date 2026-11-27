@@ -1,395 +1,247 @@
-import { useCallback, useEffect, useState } from 'react'
-import { gestionFetch, leerJson } from './GestionApp'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { pedir, enviar, nivelDias, textoDias, num, unidad, fechaCorta, ESTADO_LABEL } from './medicacionUtil'
+import { Dialogo } from './CatalogoMedicamentos'
+import PrescripcionForm from './PrescripcionForm'
 import {
-  TOMAS, TOMA_LABEL, UNIDADES, TIPO_MOV, nivelDias, textoDias, fechaAgota, dosisTexto, num,
-} from './medicacionUtil'
-import { Plus, Pencil, PackagePlus, ClipboardCheck, History, Pause, Play, Trash2, X, Loader2, Pill, HandHeart } from 'lucide-react'
-import './medicacion.css'
+  Plus, Pencil, PauseCircle, PlayCircle, History, ShieldAlert, Sparkles, Loader2, Check, X, Clock, ChevronDown,
+  CalendarDays, Pill, StopCircle,
+} from 'lucide-react'
 
-const API = '/api/gestion/medicacion'
+// Panel de medicación de un residente: qué toma en el día, PRN, variables y lo suspendido.
 
-async function pedir(url, opciones) {
-  const res = await gestionFetch(url, opciones)
-  const data = await leerJson(res)
-  if (!res.ok) throw new Error(data.error || 'Ocurrió un error.')
-  return data
+export function DiasBadge({ dias, existencia, enUso = true }) {
+  const n = nivelDias(dias, existencia, enUso)
+  return <span className={`md-dias md-dias-${n}`}>{textoDias(dias, existencia, enUso)}</span>
 }
 
-/** Etiqueta de días restantes con color según urgencia */
-export function DiasBadge({ m }) {
+function Etiquetas({ p }) {
+  const t = []
+  if (p.controlado) t.push(<span key="c" className="pt-tag ctl"><ShieldAlert size={12} /> Controlado</span>)
+  if (p.es_nueva && p.reemplaza_a_id) t.push(<span key="v" className="pt-tag nuevo"><Sparkles size={12} /> Cambió</span>)
+  else if (p.es_nueva) t.push(<span key="n" className="pt-tag nuevo"><Sparkles size={12} /> Nuevo</span>)
+  if (!p.en_pastillero && p.tipo === 'fija') t.push(<span key="p" className="pt-tag">Registro individual</span>)
+  if (p.dias_modo !== 'todos') t.push(<span key="d" className="pt-tag"><CalendarDays size={12} /> {p.texto.split(', ').find(x => /lunes|martes|miércoles|jueves|viernes|sábado|domingo|cada|un día/.test(x)) || 'Ciertos días'}</span>)
+  if (p.fecha_fin) t.push(<span key="f" className="pt-tag">Hasta {fechaCorta(p.fecha_fin)}</span>)
+  if (p.estado === 'activa' && !p.aplica_hoy) t.push(<span key="h" className="pt-tag gris">Hoy no toca</span>)
+  return t.length ? <span className="pt-tags">{t}</span> : null
+}
+
+function Tarjeta({ p, opciones, hora, puedeEditar, onCambiar, onCerrar, onReanudar, onHistorial }) {
+  const activa = p.estado === 'activa'
+  const dosis = p.dosis ? `${num(p.dosis)} ${unidad(opciones, p.unidad_dosis, p.dosis)}` : 'Según escala'
   return (
-    <span className={`md-dias md-dias-${m.prn ? 'na' : nivelDias(m.dias_restantes)}`} title={fechaAgota(m) ? `Se acaba aprox. el ${fechaAgota(m)}` : undefined}>
-      {textoDias(m)}
-    </span>
-  )
-}
-
-// ── Formulario de medicamento ────────────────────────────────────────────────
-const VACIO = { nombre: '', unidad: 'tableta', dosis: '1', tomas: [], prn: false, indicaciones: '', medico: '', fecha_inicio: '', fecha_fin: '', existencia: '' }
-
-export function MedicamentoForm({ residente, medicamento, onClose, onSaved }) {
-  const nuevo = !medicamento
-  const [f, setF] = useState(() => nuevo ? { ...VACIO } : {
-    ...VACIO, ...medicamento, dosis: String(medicamento.dosis), prn: !!medicamento.prn,
-  })
-  const [error, setError] = useState('')
-  const [guardando, setGuardando] = useState(false)
-  const set = (k) => (e) => setF(x => ({ ...x, [k]: e.target.value }))
-  const alternarToma = (id) => setF(x => ({ ...x, tomas: x.tomas.includes(id) ? x.tomas.filter(t => t !== id) : [...x.tomas, id] }))
-
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  const consumo = f.prn ? 0 : (Number(String(f.dosis).replace(',', '.')) || 0) * f.tomas.length
-
-  async function guardar(e) {
-    e.preventDefault()
-    setError(''); setGuardando(true)
-    try {
-      const body = JSON.stringify({ ...f, residente_id: residente.id })
-      const data = await pedir(nuevo ? `${API}/medicamentos` : `${API}/medicamentos/${medicamento.id}`, { method: nuevo ? 'POST' : 'PUT', body })
-      onSaved(data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setGuardando(false)
-    }
-  }
-
-  return (
-    <div className="md-overlay" onClick={onClose}>
-      <form className="md-dialogo md-dialogo-lg" onClick={e => e.stopPropagation()} onSubmit={guardar}>
-        <div className="md-dialogo-head">
-          <div>
-            <span className="gl-eyebrow">{residente.nombre}</span>
-            <h2>{nuevo ? 'Agregar medicamento' : 'Editar medicamento'}</h2>
-          </div>
-          <button type="button" className="rm-close" onClick={onClose} aria-label="Cerrar"><X size={18} /></button>
+    <li className={`pt-item${activa ? '' : ' off'}`}>
+      <div className="pt-main">
+        <div className="pt-linea">
+          {hora !== undefined && <span className="pt-hora">{hora || '—'}</span>}
+          <b>{p.nombre}</b>
+          <span className="pt-dosis">{dosis}</span>
+          <Etiquetas p={p} />
         </div>
-
-        <div className="md-dialogo-body">
-          {error && <div className="rl-error" role="alert">{error}</div>}
-          <div className="md-grid">
-            <label className="md-full">Medicamento y concentración *
-              <input className="md-input" value={f.nombre} onChange={set('nombre')} placeholder="Ej. Losartán 50 mg" required autoFocus />
-            </label>
-            <label>Dosis por toma *
-              <input className="md-input" inputMode="decimal" value={f.dosis} onChange={set('dosis')} placeholder="1, 0.5, 2…" required />
-            </label>
-            <label>Presentación
-              <select className="md-input" value={f.unidad} onChange={set('unidad')}>
-                {UNIDADES.map(u => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </label>
-          </div>
-
-          <div className="md-campo">
-            <span className="md-campo-titulo">¿En qué tomas?</span>
-            <label className="md-check">
-              <input type="checkbox" checked={f.prn} onChange={e => setF(x => ({ ...x, prn: e.target.checked }))} />
-              Solo si hace falta (sin horario fijo)
-            </label>
-            {!f.prn && (
-              <div className="md-tomas-sel">
-                {TOMAS.map(t => (
-                  <button type="button" key={t.id} className={f.tomas.includes(t.id) ? 'on' : ''} onClick={() => alternarToma(t.id)} aria-pressed={f.tomas.includes(t.id)}>
-                    {t.label}<span>{t.hora}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            {!f.prn && consumo > 0 && (
-              <p className="md-nota">Consumo: {num(consumo)} {f.unidad} al día.</p>
-            )}
-          </div>
-
-          <div className="md-grid">
-            {nuevo && (
-              <label>Existencia actual
-                <input className="md-input" inputMode="decimal" value={f.existencia} onChange={set('existencia')} placeholder={`Cuántas ${f.unidad} hay`} />
-              </label>
-            )}
-            <label>Médico que lo indica
-              <input className="md-input" value={f.medico} onChange={set('medico')} />
-            </label>
-            <label>Desde
-              <input className="md-input" type="date" value={f.fecha_inicio} onChange={set('fecha_inicio')} />
-            </label>
-            <label>Hasta <em>(si es por tiempo limitado)</em>
-              <input className="md-input" type="date" value={f.fecha_fin} onChange={set('fecha_fin')} />
-            </label>
-            <label className="md-full">Indicaciones
-              <input className="md-input" value={f.indicaciones} onChange={set('indicaciones')} placeholder="Ej. Con alimentos, triturada, tomar presión antes" />
-            </label>
-          </div>
-        </div>
-
-        <div className="md-dialogo-pie">
-          <button type="button" className="rl-btn" onClick={onClose}>Cancelar</button>
-          <button type="submit" className="rl-btn rl-btn-primary" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
-        </div>
-      </form>
-    </div>
-  )
-}
-
-// ── Entrada / conteo / dosis PRN ─────────────────────────────────────────────
-const TEXTOS_MOV = {
-  entrada: { titulo: 'Llegó medicamento', campo: '¿Cuántas llegaron?', boton: 'Sumar al inventario', nota: 'Ej. Lo trajo la familia, compra farmacia' },
-  ajuste:  { titulo: 'Contar existencia', campo: '¿Cuántas hay en realidad?', boton: 'Guardar conteo', nota: 'Ej. Conteo semanal' },
-  prn:     { titulo: 'Dar dosis', campo: 'Cantidad que se dio', boton: 'Registrar y descontar', nota: 'Motivo (obligatorio). Ej. Dolor de cabeza' },
-}
-
-export function MovimientoDialogo({ medicamento: m, tipo, onClose, onSaved }) {
-  const t = TEXTOS_MOV[tipo]
-  const [cantidad, setCantidad] = useState(tipo === 'prn' ? String(m.dosis) : '')
-  const [nota, setNota] = useState('')
-  const [error, setError] = useState('')
-  const [guardando, setGuardando] = useState(false)
-
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  const n = Number(String(cantidad).replace(',', '.'))
-  const resultado = !Number.isFinite(n) || cantidad === '' ? null
-    : tipo === 'entrada' ? m.existencia + n : tipo === 'prn' ? m.existencia - n : n
-
-  async function guardar(e) {
-    e.preventDefault()
-    setError(''); setGuardando(true)
-    try {
-      onSaved(await pedir(`${API}/medicamentos/${m.id}/movimiento`, { method: 'POST', body: JSON.stringify({ tipo, cantidad, nota }) }))
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setGuardando(false)
-    }
-  }
-
-  return (
-    <div className="md-overlay" onClick={onClose}>
-      <form className="md-dialogo" onClick={e => e.stopPropagation()} onSubmit={guardar}>
-        <div className="md-dialogo-head">
-          <div>
-            <span className="gl-eyebrow">{m.residente_nombre} · {m.nombre}</span>
-            <h2>{t.titulo}</h2>
-          </div>
-          <button type="button" className="rm-close" onClick={onClose} aria-label="Cerrar"><X size={18} /></button>
-        </div>
-        <div className="md-dialogo-body">
-          {error && <div className="rl-error" role="alert">{error}</div>}
-          <p className="md-nota">Hay <b>{num(m.existencia)} {m.unidad}</b> registradas.</p>
-          <label className="md-label">{t.campo}
-            <input className="md-input md-input-num" inputMode="decimal" value={cantidad} onChange={e => setCantidad(e.target.value)} autoFocus required />
-          </label>
-          <label className="md-label">Nota
-            <input className="md-input" value={nota} onChange={e => setNota(e.target.value)} placeholder={t.nota} required={tipo === 'prn'} />
-          </label>
-          {resultado != null && <p className="md-nota">Quedarán <b>{num(resultado)} {m.unidad}</b>.</p>}
-        </div>
-        <div className="md-dialogo-pie">
-          <button type="button" className="rl-btn" onClick={onClose}>Cancelar</button>
-          <button type="submit" className="rl-btn rl-btn-primary" disabled={guardando}>{guardando ? 'Guardando…' : t.boton}</button>
-        </div>
-      </form>
-    </div>
-  )
-}
-
-// ── Historial de movimientos de un medicamento ───────────────────────────────
-export function HistorialDialogo({ medicamento: m, onClose }) {
-  const [movs, setMovs] = useState(null)
-  const [error, setError] = useState('')
-  useEffect(() => {
-    pedir(`${API}/medicamentos/${m.id}/movimientos`).then(setMovs).catch(e => setError(e.message))
-  }, [m.id])
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  return (
-    <div className="md-overlay" onClick={onClose}>
-      <div className="md-dialogo md-dialogo-lg" onClick={e => e.stopPropagation()}>
-        <div className="md-dialogo-head">
-          <div>
-            <span className="gl-eyebrow">{m.residente_nombre}</span>
-            <h2>{m.nombre} · movimientos</h2>
-          </div>
-          <button type="button" className="rm-close" onClick={onClose} aria-label="Cerrar"><X size={18} /></button>
-        </div>
-        <div className="md-dialogo-body">
-          {error && <div className="rl-error">{error}</div>}
-          {!movs && !error && <p className="md-nota"><Loader2 className="md-spin" size={16} /> Cargando…</p>}
-          {movs && !movs.length && <p className="md-nota">Todavía no hay movimientos.</p>}
-          {movs && movs.length > 0 && (
-            <table className="md-tabla md-tabla-mov">
-              <thead><tr><th>Fecha</th><th>Movimiento</th><th className="md-r">Cantidad</th><th className="md-r">Quedan</th><th>Quién</th></tr></thead>
-              <tbody>
-                {movs.map(v => (
-                  <tr key={v.id}>
-                    <td>{new Date(v.creado_en.replace(' ', 'T') + 'Z').toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
-                    <td>
-                      {TIPO_MOV[v.tipo] || v.tipo}{v.ronda_toma ? ` · ${TOMA_LABEL[v.ronda_toma]}` : ''}
-                      {v.nota && <small>{v.nota}</small>}
-                    </td>
-                    <td className={`md-r ${v.cantidad < 0 ? 'md-neg' : 'md-pos'}`}>{v.cantidad > 0 ? '+' : ''}{num(v.cantidad)}</td>
-                    <td className="md-r">{num(v.existencia)}</td>
-                    <td>{v.usuario_nombre}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {(p.indicaciones || p.tipo !== 'fija' || !activa) && (
+          <p className="pt-extra">
+            {p.tipo === 'prn' && <span>Si hace falta: {p.prn_motivo}{p.prn_max_24h ? ` · máx. ${num(p.prn_max_24h)} en 24 h` : ''}{p.prn_intervalo_h ? ` · cada ${num(p.prn_intervalo_h)} h mínimo` : ''}</span>}
+            {p.tipo === 'variable' && <span className="pt-escala">Escala: {p.escala}</span>}
+            {p.indicaciones && <span>{p.indicaciones}</span>}
+            {!activa && <span className="pt-cierre">{ESTADO_LABEL[p.estado]}{p.motivo_cierre ? `: ${p.motivo_cierre}` : ''}{p.cerrado_por_nombre ? ` · ${p.cerrado_por_nombre}` : ''}</span>}
+          </p>
+        )}
       </div>
-    </div>
+      <div className="pt-stock">
+        {p.tipo !== 'prn' && activa && <DiasBadge dias={p.dias_restantes} existencia={p.existencia} />}
+        <small>{p.existencia_texto}{p.provee === 'centro' ? ' · residencia' : ''}</small>
+      </div>
+      <div className="pt-acc">
+        <button className="md-icono" onClick={() => onHistorial(p)} title="Historial de cambios" aria-label={`Historial de ${p.nombre}`}><History /></button>
+        {puedeEditar && activa && <>
+          <button className="md-icono" onClick={() => onCambiar(p)} title="Cambiar dosis u horario" aria-label={`Cambiar ${p.nombre}`}><Pencil /></button>
+          <button className="md-icono" onClick={() => onCerrar(p, 'suspender')} title="Suspender" aria-label={`Suspender ${p.nombre}`}><PauseCircle /></button>
+          <button className="md-icono" onClick={() => onCerrar(p, 'terminar')} title="Terminar" aria-label={`Terminar ${p.nombre}`}><StopCircle /></button>
+        </>}
+        {puedeEditar && p.estado === 'suspendida' && (
+          <button className="md-icono" onClick={() => onReanudar(p)} title="Reanudar" aria-label={`Reanudar ${p.nombre}`}><PlayCircle /></button>
+        )}
+      </div>
+    </li>
   )
 }
 
-// ── Panel de medicación de un residente ──────────────────────────────────────
-// Se usa en la pestaña "Por residente" y puede incrustarse en el expediente.
-export default function MedicacionResidente({ residente, puedeEditar, onCambio }) {
-  const [meds, setMeds] = useState(null)
+function Alergias({ residente, puedeEditar, onGuardado }) {
+  const [editando, setEditando] = useState(false)
+  const [valor, setValor] = useState(residente.alergias || '')
+  const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
-  const [dialogo, setDialogo] = useState(null) // { tipo: 'form'|'entrada'|'ajuste'|'prn'|'historial', med }
-  const [verSuspendidos, setVerSuspendidos] = useState(false)
+  useEffect(() => { setValor(residente.alergias || ''); setEditando(false) }, [residente.id, residente.alergias])
 
-  const cargar = useCallback(async () => {
-    setError('')
-    try { setMeds(await pedir(`${API}/medicamentos?residente_id=${residente.id}&todos=1`)) }
-    catch (e) { setError(e.message) }
-  }, [residente.id])
-
-  useEffect(() => { setMeds(null); cargar() }, [cargar])
-
-  function listo() {
-    setDialogo(null)
-    cargar()
-    onCambio?.()
+  async function guardar() {
+    setGuardando(true); setError('')
+    try { const r = await enviar(`residentes/${residente.id}/alergias`, 'PATCH', { alergias: valor }); onGuardado(r.alergias); setEditando(false) }
+    catch (e) { setError(e.message) } finally { setGuardando(false) }
   }
 
-  async function alternarActivo(m) {
-    try {
-      await pedir(`${API}/medicamentos/${m.id}/activo`, { method: 'PATCH', body: JSON.stringify({ activo: !m.activo }) })
-      listo()
-    } catch (e) { setError(e.message) }
-  }
-
-  async function borrar(m) {
-    if (!window.confirm(`¿Borrar ${m.nombre}? Úsalo solo si se capturó por error.`)) return
-    try {
-      await pedir(`${API}/medicamentos/${m.id}`, { method: 'DELETE' })
-      listo()
-    } catch (e) { setError(e.message) }
-  }
-
-  const activos = (meds || []).filter(m => m.activo)
-  const suspendidos = (meds || []).filter(m => !m.activo)
-  const conResidente = (m) => ({ ...m, residente_nombre: residente.nombre })
-
-  function Tarjeta({ m }) {
+  if (editando) {
     return (
-      <div className={`md-med${m.activo ? '' : ' md-med-off'}`}>
-        <div className="md-med-main">
-          <div className="md-med-nombre">
-            <b>{m.nombre}</b>
-            <span>{dosisTexto(m.dosis, m.unidad)}{m.prn ? ' · solo si hace falta' : ''}</span>
-          </div>
-          {!m.prn && (
-            <div className="md-med-tomas">
-              {TOMAS.map(t => <span key={t.id} className={m.tomas.includes(t.id) ? 'on' : ''}>{t.label}</span>)}
-            </div>
-          )}
-          {(m.indicaciones || m.medico || m.fecha_fin) && (
-            <p className="md-med-extra">
-              {m.indicaciones}
-              {m.medico && <span>Indica: {m.medico}</span>}
-              {m.fecha_fin && <span>Hasta el {m.fecha_fin.split('-').reverse().join('/')}</span>}
-            </p>
-          )}
-        </div>
-        <div className="md-med-stock">
-          <strong>{num(m.existencia)}</strong>
-          <span>{m.unidad} en existencia</span>
-          {m.activo ? <DiasBadge m={m} /> : <span className="md-dias md-dias-na">Suspendido</span>}
-        </div>
-        <div className="md-med-acc">
-          {puedeEditar && m.activo && (
-            <>
-              {m.prn
-                ? <button className="rl-btn" onClick={() => setDialogo({ tipo: 'prn', med: m })}><HandHeart size={16} /> Dar</button>
-                : null}
-              <button className="rl-btn" onClick={() => setDialogo({ tipo: 'entrada', med: m })}><PackagePlus size={16} /> Llegó</button>
-              <button className="rl-btn" onClick={() => setDialogo({ tipo: 'ajuste', med: m })} title="Contar lo que hay y corregir"><ClipboardCheck size={16} /> Contar</button>
-            </>
-          )}
-          <button className="md-icono" onClick={() => setDialogo({ tipo: 'historial', med: m })} title="Movimientos" aria-label="Movimientos"><History size={17} /></button>
-          {puedeEditar && (
-            <>
-              <button className="md-icono" onClick={() => setDialogo({ tipo: 'form', med: m })} title="Editar" aria-label="Editar"><Pencil size={17} /></button>
-              <button className="md-icono" onClick={() => alternarActivo(m)} title={m.activo ? 'Suspender' : 'Reactivar'} aria-label={m.activo ? 'Suspender' : 'Reactivar'}>
-                {m.activo ? <Pause size={17} /> : <Play size={17} />}
-              </button>
-              {!m.activo && <button className="md-icono" onClick={() => borrar(m)} title="Borrar (captura por error)" aria-label="Borrar"><Trash2 size={17} /></button>}
-            </>
-          )}
-        </div>
+      <div className="pt-alergias editando">
+        <ShieldAlert size={17} />
+        <input className="md-input" value={valor} onChange={e => setValor(e.target.value)} autoFocus placeholder="Ej. Penicilina, sulfas. Vacío si no tiene."
+          onKeyDown={e => { if (e.key === 'Enter') guardar(); if (e.key === 'Escape') setEditando(false) }} />
+        <button className="rl-btn rl-btn-primary" onClick={guardar} disabled={guardando}>{guardando ? <Loader2 className="md-spin" size={15} /> : <Check size={15} />} Guardar</button>
+        <button className="rl-btn" onClick={() => setEditando(false)}>Cancelar</button>
+        {error && <span className="rt-error">{error}</span>}
       </div>
     )
   }
+  return (
+    <div className={`pt-alergias${residente.alergias ? ' hay' : ''}`}>
+      <ShieldAlert size={17} />
+      <span>{residente.alergias ? <>Alergias: <b>{residente.alergias}</b></> : 'Sin alergias registradas'}</span>
+      {puedeEditar && <button className="rl-link" onClick={() => setEditando(true)}>{residente.alergias ? 'Editar' : 'Registrar alergias'}</button>}
+    </div>
+  )
+}
+
+function DialogoCerrar({ p, accion, onCerrar, onHecho }) {
+  const [motivo, setMotivo] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
+  const RAPIDOS = accion === 'suspender'
+    ? ['Indicación médica', 'Hospitalización', 'Reacción adversa', 'Sin existencias']
+    : ['Terminó el tratamiento', 'Indicación médica', 'Capturado por error']
+  async function guardar() {
+    setGuardando(true); setError('')
+    try { onHecho(await enviar(`prescripciones/${p.id}/${accion}`, 'POST', { motivo })) }
+    catch (e) { setError(e.message) } finally { setGuardando(false) }
+  }
+  return (
+    <Dialogo titulo={`${accion === 'suspender' ? 'Suspender' : 'Terminar'} ${p.nombre}`} sub={p.residente_nombre} onCerrar={onCerrar}
+      pie={<>
+        <button className="rl-btn" onClick={onCerrar}>Cancelar</button>
+        <button className="rl-btn rl-btn-primary" onClick={guardar} disabled={guardando || !motivo.trim()}>
+          {guardando ? <Loader2 className="md-spin" size={16} /> : accion === 'suspender' ? <PauseCircle size={16} /> : <StopCircle size={16} />}
+          {accion === 'suspender' ? ' Suspender' : ' Terminar'}
+        </button>
+      </>}>
+      <p className="md-nota">{accion === 'suspender' ? 'Deja de aparecer en las rondas. Se puede reanudar después.' : 'Deja de aparecer en las rondas y queda en el historial.'}</p>
+      <div className="rt-chips">
+        {RAPIDOS.map(m => <button key={m} type="button" className={`rt-chip${motivo === m ? ' on' : ''}`} onClick={() => setMotivo(m)}>{motivo === m && <Check />}{m}</button>)}
+      </div>
+      <label className="md-label">Motivo
+        <input className="md-input" value={motivo} onChange={e => setMotivo(e.target.value)} autoFocus />
+      </label>
+      {error && <div className="rl-error" role="alert">{error}</div>}
+    </Dialogo>
+  )
+}
+
+function DialogoHistorial({ p, onCerrar }) {
+  const [versiones, setVersiones] = useState(null)
+  const [error, setError] = useState('')
+  useEffect(() => { pedir(`prescripciones/${p.id}/historial`).then(setVersiones).catch(e => setError(e.message)) }, [p.id])
+  return (
+    <Dialogo ancho titulo={`Historial de ${p.nombre}`} sub={p.residente_nombre} onCerrar={onCerrar}>
+      {error && <div className="rl-error">{error}</div>}
+      {!versiones && !error && <div className="md-skel" />}
+      {versiones && (
+        <ol className="pt-versiones">
+          {versiones.map((v, i) => (
+            <li key={v.id} className={v.estado === 'activa' ? 'actual' : ''}>
+              <div className="pt-v-head">
+                <b>{i === 0 ? 'Versión actual' : `Versión ${versiones.length - i}`}</b>
+                <span className={`pt-estado e-${v.estado}`}>{ESTADO_LABEL[v.estado]}</span>
+                <small>{fechaCorta(v.fecha_inicio)}{v.fecha_fin ? ` → ${fechaCorta(v.fecha_fin)}` : ''}</small>
+              </div>
+              <p>{v.texto}</p>
+              <small className="md-nota">
+                {v.motivo_cambio ? `Motivo: ${v.motivo_cambio} · ` : ''}Capturó {v.creado_por_nombre || '—'}
+                {v.motivo_cierre && v.estado !== 'reemplazada' ? ` · ${ESTADO_LABEL[v.estado]}: ${v.motivo_cierre}` : ''}
+              </small>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Dialogo>
+  )
+}
+
+export default function MedicacionResidente({ residente, opciones, rondas, onCambio }) {
+  const puedeEditar = opciones.puede_prescribir
+  const [lista, setLista] = useState(null)
+  const [error, setError] = useState('')
+  const [form, setForm] = useState(null)          // { editar?, prellenar? }
+  const [cerrar, setCerrar] = useState(null)      // { p, accion }
+  const [historial, setHistorial] = useState(null)
+  const [verCerradas, setVerCerradas] = useState(false)
+
+  const cargar = useCallback(() => {
+    setError('')
+    return pedir(`prescripciones?residente_id=${residente.id}&estado=todas`).then(setLista).catch(e => setError(e.message))
+  }, [residente.id])
+  useEffect(() => { setLista(null); cargar() }, [cargar])
+
+  const activas = useMemo(() => (lista || []).filter(p => p.estado === 'activa'), [lista])
+  const cerradas = useMemo(() => (lista || []).filter(p => p.estado !== 'activa' && p.estado !== 'reemplazada'), [lista])
+  const porRonda = useMemo(() => rondas.filter(r => r.activa).map(r => ({
+    ronda: r,
+    items: activas.filter(p => p.tipo !== 'prn').flatMap(p => p.horarios.filter(h => h.ronda_id === r.id).map(h => ({ p, hora: h.hora })))
+      .sort((a, b) => (a.hora || '99').localeCompare(b.hora || '99') || a.p.nombre.localeCompare(b.p.nombre)),
+  })), [rondas, activas])
+  const prn = activas.filter(p => p.tipo === 'prn')
+
+  async function reanudar(p) {
+    setError('')
+    try { await enviar(`prescripciones/${p.id}/reanudar`, 'POST'); await cargar(); onCambio?.() } catch (e) { setError(e.message) }
+  }
+  const acciones = { opciones, puedeEditar, onCambiar: (p) => setForm({ editar: p }), onCerrar: (p, accion) => setCerrar({ p, accion }), onReanudar: reanudar, onHistorial: setHistorial }
 
   return (
-    <div className="md-residente">
-      <div className="md-residente-head">
-        <div>
-          <h3>Medicación</h3>
-          {meds && <span>{activos.length ? `${activos.length} activo${activos.length === 1 ? '' : 's'}` : 'Sin medicamentos'}</span>}
-        </div>
-        {puedeEditar && (
-          <button className="rl-btn rl-btn-primary" onClick={() => setDialogo({ tipo: 'form', med: null })}><Plus size={16} /> Agregar medicamento</button>
-        )}
+    <div className="pt-panel">
+      <Alergias residente={residente} puedeEditar={puedeEditar} onGuardado={(a) => onCambio?.({ ...residente, alergias: a })} />
+
+      <div className="pt-barra">
+        <h3>Qué toma en el día <span>{activas.length} {activas.length === 1 ? 'medicamento activo' : 'medicamentos activos'}</span></h3>
+        {puedeEditar && <button className="rl-btn rl-btn-primary" onClick={() => setForm({})}><Plus size={16} /> Agregar medicamento</button>}
       </div>
 
       {error && <div className="rl-error" role="alert">{error}</div>}
-      {!meds && !error && <div className="md-skel" />}
-
-      {meds && !activos.length && !suspendidos.length && (
-        <div className="rl-vacio">
-          <div className="rl-vacio-icon"><Pill size={22} /></div>
-          <p>{residente.nombre} no tiene medicamentos registrados.</p>
-        </div>
-      )}
-
-      <div className="md-meds">
-        {activos.map(m => <Tarjeta key={m.id} m={m} />)}
-      </div>
-
-      {suspendidos.length > 0 && (
+      {lista == null ? <div className="md-skel" /> : !activas.length && !cerradas.length ? (
+        <div className="rl-vacio"><span className="rl-vacio-icon"><Pill /></span><p>No tiene medicamentos registrados.</p></div>
+      ) : (
         <>
-          <button className="rl-link md-ver-susp" onClick={() => setVerSuspendidos(v => !v)}>
-            {verSuspendidos ? 'Ocultar' : 'Ver'} suspendidos ({suspendidos.length})
-          </button>
-          {verSuspendidos && <div className="md-meds">{suspendidos.map(m => <Tarjeta key={m.id} m={m} />)}</div>}
+          {porRonda.map(({ ronda, items }) => (
+            <section key={ronda.id} className="pt-ronda">
+              <h4><Clock size={15} /> {ronda.nombre} <small>{ronda.detalle} · {ronda.hora_inicio}–{ronda.hora_fin}</small></h4>
+              {items.length ? (
+                <ul className="pt-lista">{items.map(({ p, hora }, i) => <Tarjeta key={`${p.id}-${i}`} p={p} hora={hora} {...acciones} />)}</ul>
+              ) : <p className="pt-vacia">Nada en esta ronda.</p>}
+            </section>
+          ))}
+          {prn.length > 0 && (
+            <section className="pt-ronda">
+              <h4>Si hace falta (PRN)</h4>
+              <ul className="pt-lista">{prn.map(p => <Tarjeta key={p.id} p={p} {...acciones} />)}</ul>
+            </section>
+          )}
+          {cerradas.length > 0 && (
+            <section className="pt-ronda">
+              <button className="rl-link pt-ver" onClick={() => setVerCerradas(v => !v)} aria-expanded={verCerradas}>
+                <ChevronDown size={16} style={{ transform: verCerradas ? 'rotate(180deg)' : undefined }} /> Suspendidos y terminados ({cerradas.length})
+              </button>
+              {verCerradas && <ul className="pt-lista">{cerradas.map(p => <Tarjeta key={p.id} p={p} {...acciones} />)}</ul>}
+            </section>
+          )}
         </>
       )}
 
-      {dialogo?.tipo === 'form' && (
-        <MedicamentoForm residente={residente} medicamento={dialogo.med} onClose={() => setDialogo(null)} onSaved={listo} />
+      {form && (
+        <PrescripcionForm opciones={opciones} rondas={rondas} residente={residente} editar={form.editar} prellenar={form.prellenar}
+          onCerrar={() => setForm(null)}
+          onGuardado={(p, { cerrar: c }) => { cargar(); onCambio?.(); if (c) setForm(null) }} />
       )}
-      {['entrada', 'ajuste', 'prn'].includes(dialogo?.tipo) && (
-        <MovimientoDialogo medicamento={conResidente(dialogo.med)} tipo={dialogo.tipo} onClose={() => setDialogo(null)} onSaved={listo} />
+      {cerrar && (
+        <DialogoCerrar p={cerrar.p} accion={cerrar.accion} onCerrar={() => setCerrar(null)}
+          onHecho={() => { setCerrar(null); cargar(); onCambio?.() }} />
       )}
-      {dialogo?.tipo === 'historial' && (
-        <HistorialDialogo medicamento={conResidente(dialogo.med)} onClose={() => setDialogo(null)} />
-      )}
+      {historial && <DialogoHistorial p={historial} onCerrar={() => setHistorial(null)} />}
     </div>
   )
 }

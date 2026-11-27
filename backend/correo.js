@@ -133,4 +133,13 @@ function enviarAvisoRegistro({ para, nombre, email, enlace }) {
   });
 }
 
-module.exports = { correoConfigurado, enviarInvitacion, enviarRecuperacion, enviarAvisoRegistro };
+function enviarAviso({ para, titulo, texto, enlace }) {
+  const parrafos = [texto || titulo, 'Este aviso también está en la campanita de Gestión.'];
+  return enviar({
+    para, asunto: titulo,
+    html: plantilla({ titulo, parrafos, boton: 'Abrir Gestión', enlace, pie: 'Los avisos que recibe cada rol se cambian en Configuración → Permisos y notificaciones.' }),
+    texto: `${parrafos.join('\n')}\n\n${enlace}`,
+  });
+}
+
+module.exports = { correoConfigurado, enviarInvitacion, enviarRecuperacion, enviarAvisoRegistro, enviarAviso };

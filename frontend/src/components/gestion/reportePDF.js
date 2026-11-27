@@ -144,7 +144,7 @@ export async function generarReportePDF({ reporte, alertas }) {
     elim.forEach(([nombre, lista]) => {
       const regs = (Array.isArray(lista) ? lista : []).filter(e => e && typeof e === 'object' && !Array.isArray(e))
       const detalle = regs.length
-        ? regs.map(e => `${e.hora || '—'}${e.caracteristicas?.length ? ` ${e.caracteristicas.join(', ')}` : ''}`).join(' · ')
+        ? regs.map((e, i) => `${i + 1}: ${e.caracteristicas?.length ? e.caracteristicas.join(', ') : 'sin características'}`).join(' · ')
         : 'Sin registrar'
       doc.setFont('helvetica', 'bold').setFontSize(8.5).setTextColor(...BLACK)
       doc.text(`${nombre} (${regs.length}):`, M, y)

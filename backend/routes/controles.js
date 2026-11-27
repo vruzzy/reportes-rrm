@@ -51,7 +51,7 @@ router.get('/residente/:id', requierePermiso('controles', 'ver'), (req, res) => 
 
 // PUT /api/gestion/controles  → guarda (o reemplaza) una toma. Si todos los valores
 // quedan vacíos, la toma se borra.
-router.put('/', requierePermiso('controles', 'editar'), (req, res) => {
+router.put('/', requierePermiso('controles', ['crear', 'editar']), (req, res) => {
   const b = req.body || {};
   const residente_id = Number(b.residente_id);
   if (!residente_id || !esFecha(b.fecha) || !TURNOS.includes(b.turno) || !MOMENTOS.includes(b.momento)) {
@@ -108,6 +108,19 @@ function eventosDelTurno(fecha, turno, residenteId) {
   return filas.map(eventoPublico);
 }
 
+// GET /api/gestion/controles/eliminacion/residente/:id?dias=14  → micciones y evacuaciones recientes de un residente
+router.get('/eliminacion/residente/:id', requierePermiso('controles', 'ver'), (req, res) => {
+  const dias = Math.min(Math.max(Number(req.query.dias) || 14, 1), 120);
+  const desde = new Date(Date.now() - dias * 86400000).toISOString().slice(0, 10);
+  try {
+    res.json(db.prepare('SELECT * FROM controles_eliminacion WHERE residente_id = ? AND fecha >= ? ORDER BY fecha DESC, hora DESC, id DESC')
+      .all([Number(req.params.id), desde]).map(eventoPublico));
+  } catch (err) {
+    console.error('Error en historial de micciones:', err);
+    res.status(500).json({ error: 'No se pudo cargar el historial.' });
+  }
+});
+
 // GET /api/gestion/controles/eliminacion?fecha&turno
 router.get('/eliminacion', requierePermiso('controles', 'ver'), (req, res) => {
   const { fecha, turno } = req.query;
@@ -121,7 +134,7 @@ router.get('/eliminacion', requierePermiso('controles', 'ver'), (req, res) => {
 });
 
 // POST /api/gestion/controles/eliminacion  { residente_id, fecha, turno, tipo, hora, caracteristicas }
-router.post('/eliminacion', requierePermiso('controles', 'editar'), (req, res) => {
+router.post('/eliminacion', requierePermiso('controles', 'crear'), (req, res) => {
   const b = req.body || {};
   const residente_id = Number(b.residente_id);
   if (!residente_id || !esFecha(b.fecha) || !TURNOS.includes(b.turno) || !TIPOS.includes(b.tipo)) {
@@ -165,7 +178,7 @@ router.put('/eliminacion/:id', requierePermiso('controles', 'editar'), (req, res
 });
 
 // DELETE /api/gestion/controles/eliminacion/:id
-router.delete('/eliminacion/:id', requierePermiso('controles', 'editar'), (req, res) => {
+router.delete('/eliminacion/:id', requierePermiso('controles', 'eliminar'), (req, res) => {
   try {
     const r = db.prepare('DELETE FROM controles_eliminacion WHERE id = ?').run([Number(req.params.id)]);
     if (!r.changes) return res.status(404).json({ error: 'Registro no encontrado.' });

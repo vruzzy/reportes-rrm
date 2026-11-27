@@ -1,0 +1,30 @@
+/* Configuración del centro: mosaicos (prefijo cf-) */
+.cf-grupo { margin-bottom: 22px; }
+.cf-grupo-tit { margin: 0 0 10px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); }
+.cf-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.cf-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 170px; padding: 22px 20px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface, var(--bg)); color: var(--ink); font: inherit; text-align: center; cursor: pointer;
+  transition: border-color .15s, background .15s, transform .15s;
+}
+.cf-tile:hover { border-color: var(--rose-600); background: var(--rose-50); }
+.cf-tile:focus-visible { outline: 2px solid var(--rose-600); outline-offset: 2px; }
+.cf-tile-ico { width: 48px; height: 48px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--rose-50); color: var(--rose-600); margin-bottom: 4px; }
+.cf-tile strong { font-size: 17px; font-weight: 600; }
+.cf-tile > span:last-child { font-size: 14px; color: var(--ink-3); line-height: 1.35; max-width: 260px; }
+@media (prefers-reduced-motion: no-preference) { .cf-tile:hover { transform: translateY(-1px); } }
+
+.cf-volver { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 15px; }
+.cf-head { margin-bottom: 16px; }
+.cf-head-desc { margin: 4px 0 0; font-size: 15.5px; color: var(--ink-3); }
+.cf-contenido { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.cf-nota { margin: 0; }
+.cf-dos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; }
+.cf-lista-base { display: flex; flex-direction: column; gap: 12px; }
+@media (max-width: 640px) {
+  .cf-tiles { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cf-tile { min-height: 120px; padding: 14px 10px; }
+  .cf-tile strong { font-size: 15.5px; }
+  .cf-tile > span:last-child { font-size: 13px; }
+  .cf-dos { grid-template-columns: 1fr; }
+}

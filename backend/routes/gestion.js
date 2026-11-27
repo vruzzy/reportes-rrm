@@ -66,7 +66,7 @@ router.get('/residentes', requierePermiso('listado', 'ver'), (req, res) => {
 });
 
 // POST /api/gestion/residentes — alta rápida desde Gestión
-router.post('/residentes', requierePermiso('listado', 'editar'), (req, res) => {
+router.post('/residentes', requierePermiso('listado', 'crear'), (req, res) => {
   let campos;
   try {
     const nombre = texto(req.body?.nombre);

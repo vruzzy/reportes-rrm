@@ -31,6 +31,14 @@ app.use('/api/gestion/usuarios', require('./routes/usuarios'));
 app.use('/api/gestion/controles', require('./routes/controles'));
 app.use('/api/gestion/reportes',  require('./routes/reportesGestion'));
 app.use('/api/gestion/medicacion', require('./routes/medicacion'));
+app.use('/api/gestion/banos',      require('./routes/banos'));
+app.use('/api/gestion/actividades', require('./routes/actividades'));
+app.use('/api/gestion/rol',        require('./routes/rolDia'));
+app.use('/api/gestion/personal',   require('./routes/personal'));
+app.use('/api/gestion/asistencia', require('./routes/asistencia'));
+app.use('/api/gestion/avisos',     require('./routes/avisos'));
+app.use('/api/gestion/roles',      require('./routes/roles'));
+app.use('/api/gestion/documentos', require('./routes/documentos'));
 app.use('/api/gestion',   require('./routes/gestion'));
 app.use('/api', reporteRoutes);
 

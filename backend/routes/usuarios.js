@@ -3,7 +3,7 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../database');
 const { requireAuth, crearEnlace, enlaceUrl, validarEmail, usuarioPublico } = require('./auth');
-const { ROLES, MODULOS, normalizar, requiereAdmin } = require('../permisos');
+const { ROLES, MODULOS, ACCIONES, listaRoles, rolDe, normalizar, requiereAdmin } = require('../permisos');
 const correo  = require('../correo');
 
 router.use(requireAuth, requiereAdmin);
@@ -24,7 +24,7 @@ function vista(u) {
 }
 
 function validarRol(rol) {
-  if (!ROLES[rol]) throw new Error('Rol no válido.');
+  if (!rolDe(rol)) throw new Error('Rol no válido.');
   return rol;
 }
 
@@ -36,8 +36,8 @@ function adminsActivos(excepto) {
 // Catálogo para el frontend
 router.get('/catalogo', (req, res) => {
   res.json({
-    roles: Object.entries(ROLES).map(([id, r]) => ({ id, label: r.label, permisos: r.permisos })),
-    modulos: MODULOS,
+    roles: listaRoles().map(r => ({ id: r.id, label: r.label, permisos: r.permisos })),
+    modulos: MODULOS, acciones: ACCIONES,
     correo: correo.correoConfigurado(),
   });
 });

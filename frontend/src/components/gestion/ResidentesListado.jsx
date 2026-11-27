@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { gestionFetch } from './GestionApp'
 import ResidenteExpedienteModal from './ResidenteExpedienteModal'
+import ResidentePerfil from './ResidentePerfil'
 import {
   Plus, Search, Download, Columns3, Phone, MessageCircle, Pencil, BedDouble, DoorOpen, Cake, FileWarning, X,
   ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ChevronsUpDown,
@@ -137,7 +138,8 @@ function Stat({ tono, etiqueta, detalle, valor, activo, onClick, i }) {
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
-export default function ResidentesListado({ puedeEditar = true }) {
+export default function ResidentesListado({ puedeEditar = true, puedeCrear = puedeEditar, permisos = {}, acciones = {} }) {
+  const [perfil, setPerfil] = useState(null)   // residente con el perfil abierto
   const [pestana, setPestana] = useState('residentes')
   const [residentes, setResidentes] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -163,11 +165,11 @@ export default function ResidentesListado({ puedeEditar = true }) {
       const escribiendo = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)
       if (escribiendo || editando || e.ctrlKey || e.metaKey || e.altKey) return
       if (e.key === '/') { e.preventDefault(); buscarRef.current?.focus() }
-      if (puedeEditar && e.key.toLowerCase() === 'n') { e.preventDefault(); setEditando('nuevo') }
+      if (puedeCrear && e.key.toLowerCase() === 'n') { e.preventDefault(); setEditando('nuevo') }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [editando, puedeEditar])
+  }, [editando, puedeCrear])
 
   const avisar = useCallback((texto, accion) => {
     const id = Date.now() + Math.random()
@@ -264,6 +266,18 @@ export default function ResidentesListado({ puedeEditar = true }) {
     setUbic('todos'); setEspecial(null); setBusqueda('')
   }
 
+  // El perfil se actualiza cuando se guardan cambios del expediente
+  const perfilActual = perfil && (residentes.find(x => x.id === perfil.id) || perfil)
+  if (perfilActual) return (
+    <>
+      <ResidentePerfil residente={perfilActual} permisos={permisos} acciones={acciones} onVolver={() => setPerfil(null)} onEditar={() => setEditando(perfilActual)} />
+      {editando && (
+        <ResidenteExpedienteModal residente={editando === 'nuevo' ? null : editando} onClose={() => setEditando(null)}
+          onSaved={(r) => guardado(r, editando === 'nuevo')} />
+      )}
+    </>
+  )
+
   return (
     <>
       <header className="gl-header">
@@ -271,11 +285,11 @@ export default function ResidentesListado({ puedeEditar = true }) {
           <p className="gl-eyebrow">Residentes</p>
           <h1>Listado de residentes</h1>
         </div>
-        {puedeEditar ? (
+        {puedeCrear ? (
           <button className="rl-btn rl-btn-primary" onClick={() => setEditando('nuevo')} title="Agregar residente (tecla N)">
             <Icono d={IC.mas} /> Agregar residente
           </button>
-        ) : <span className="rl-solo-ver">Solo lectura</span>}
+        ) : !puedeEditar && <span className="rl-solo-ver">Solo lectura</span>}
       </header>
 
       <div className="rl-tabs" role="tablist">
@@ -373,7 +387,7 @@ export default function ResidentesListado({ puedeEditar = true }) {
                 <p>{total ? 'Ningún residente coincide con los filtros.' : 'Aún no hay residentes registrados.'}</p>
                 {total
                   ? <button className="rl-btn" onClick={limpiarFiltros}>Limpiar filtros</button>
-                  : puedeEditar && <button className="rl-btn rl-btn-primary" onClick={() => setEditando('nuevo')}>Agregar el primero</button>}
+                  : puedeCrear && <button className="rl-btn rl-btn-primary" onClick={() => setEditando('nuevo')}>Agregar el primero</button>}
               </div>
             ) : (
               <table className="rl-table">
@@ -402,8 +416,8 @@ export default function ResidentesListado({ puedeEditar = true }) {
                     const e = edad(r.fecha_nacimiento)
                     const cumple = cumpleEsteMes(r.fecha_nacimiento)
                     return (
-                      <tr key={r.id} onClick={() => puedeEditar && setEditando(r)} tabIndex={0} className={puedeEditar ? '' : 'rl-ro'}
-                        onKeyDown={ev => puedeEditar && ev.key === 'Enter' && setEditando(r)}
+                      <tr key={r.id} onClick={() => setPerfil(r)} tabIndex={0} title="Abrir su perfil"
+                        onKeyDown={ev => ev.key === 'Enter' && setPerfil(r)}
                         style={{ animationDelay: `${Math.min(i, 14) * 45}ms` }}>
                         <td>
                           <div className="rl-person">

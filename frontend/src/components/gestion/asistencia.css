@@ -1,0 +1,66 @@
+/* Entradas y salidas (prefijo as-) */
+.as-root { max-width: 1200px; }
+.as-marcar { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 28px 20px; }
+.as-reloj { font-size: 46px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+.as-fecha { font-size: 16px; color: var(--ink-2); }
+.as-turno { display: inline-flex; align-items: center; gap: 6px; font-size: 16px; color: var(--ink-2); margin-top: 4px; }
+.as-turno svg { width: 17px; height: 17px; color: var(--ink-3); }
+.as-abierta { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; color: var(--green); background: var(--green-50); border-radius: 999px; padding: 3px 12px; }
+.as-abierta svg { width: 15px; height: 15px; }
+.as-boton {
+  margin-top: 12px; width: 100%; max-width: 380px; min-height: 68px; border-radius: var(--r-lg); border: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; font: inherit; font-size: 21px; font-weight: 700; color: #fff;
+}
+.as-boton svg { width: 24px; height: 24px; }
+.as-boton.entrada { background: var(--rose-600); }
+.as-boton.salida { background: #2f6f9f; }
+.as-boton:disabled { opacity: .75; cursor: default; }
+.as-boton:not(:disabled):hover { filter: brightness(1.08); }
+.as-ayuda { display: inline-flex; align-items: center; gap: 5px; max-width: 420px; }
+.as-ayuda svg { width: 14px; height: 14px; flex-shrink: 0; }
+.as-ok, .as-error { width: 100%; max-width: 460px; margin: 6px 0 0; text-align: left; }
+.as-tabla th, .as-tabla td { padding: 9px 8px; }
+.as-tabla thead th { font-size: 13px; text-transform: uppercase; letter-spacing: .03em; }
+.as-hora { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; white-space: nowrap; }
+.as-hora em { font-style: normal; font-weight: 500; font-size: 11.5px; color: var(--orange); background: var(--orange-50); border-radius: 999px; padding: 0 6px; }
+.as-estado { display: inline-block; font-size: 13.5px; font-weight: 600; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
+.as-estado em { font-style: normal; font-weight: 500; }
+.as-estado.ok { color: var(--green); background: var(--green-50); }
+.as-estado.warn { color: var(--orange); background: var(--orange-50); }
+.as-estado.mal { color: var(--rose-600); background: var(--rose-50); }
+.as-estado.neutro { color: var(--ink-3); background: var(--subtle); }
+.as-mano { display: inline-flex; align-items: center; gap: 3px; font-size: 13.5px; margin-left: 6px; }
+.as-mano svg { width: 13px; height: 13px; }
+.as-sincuenta { font-style: normal; font-weight: 400; font-size: 12.5px; color: var(--ink-3); text-transform: none; }
+.as-ubic { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.as-ubic .rl-btn svg { width: 16px; height: 16px; }
+.as-ubic-punto { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.as-ubic-punto > svg { width: 18px; height: 18px; color: var(--rose-600); }
+.as-ubic-punto em { font-style: normal; color: var(--ink-3); }
+.as-ubic-form { width: 100%; }
+.in-marcar { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; }
+.in-marcar svg { width: 17px; height: 17px; }
+@media (max-width: 640px) {
+  .as-reloj { font-size: 40px; }
+  .as-boton { font-size: 19px; min-height: 62px; }
+}
+
+/* Avisos de retardo (Configuración) */
+.as-avisos { display: flex; flex-direction: column; gap: 12px; }
+.as-avisos-ops { display: flex; flex-direction: column; gap: 10px; }
+.as-avisos-h { margin: 6px 0 0; font-size: 16px; font-weight: 600; }
+.as-avisos-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.as-avisos-persona { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); cursor: pointer; }
+.as-avisos-persona:hover { border-color: var(--line-h); }
+.as-avisos-persona.on { border-color: var(--rose-600); background: var(--rose-50); }
+.as-avisos-persona input { width: 18px; height: 18px; accent-color: var(--rose); flex: none; }
+.as-avisos-persona span { display: flex; flex-direction: column; min-width: 0; }
+.as-avisos-persona strong { font-size: 15.5px; font-weight: 600; }
+.as-avisos-persona em { font-style: normal; font-size: 13.5px; color: var(--ink-3); }
+
+/* Día libre: no se pide marcar */
+.as-libre { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--subtle); text-align: center; max-width: 460px; }
+.as-libre > svg { width: 34px; height: 34px; color: var(--ink-3); }
+.as-libre strong { font-size: 19px; }
+.as-libre span { font-size: 15.5px; color: var(--ink-2); }
+.as-libre .rl-link { margin-top: 6px; font-size: 14.5px; }

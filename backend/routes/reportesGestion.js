@@ -50,9 +50,9 @@ function construirPrompt({ residente, turno, d, signos, aprendizaje }) {
     c === 'Cambio de pañal' && d.cambiosPanal > 0
       ? `Cambio de pañal (${d.cambiosPanal} ${d.cambiosPanal === 1 ? 'vez' : 'veces'})` : c).join(', ');
   const actividades = d.actividadesDia.filter(a => a !== 'N/A').join(', ');
-  // Cada registro viene de Controles diarios: { hora, caracteristicas }
+  // Cada registro viene de Controles diarios. La hora no va al reporte (lo pidió el dueño).
   const registro = (arr, nombre) => arr.length
-    ? arr.map((e, i) => `${nombre} ${i + 1}${e.hora ? ` (${e.hora} h)` : ''}: ${e.caracteristicas?.length ? e.caracteristicas.join(', ') : 'sin características registradas'}`).join(' | ')
+    ? arr.map((e, i) => `${nombre} ${i + 1}: ${e.caracteristicas?.length ? e.caracteristicas.join(', ') : 'sin características registradas'}`).join(' | ')
     : '';
   const micc = registro(d.micciones, 'Micción');
   const evac = registro(d.evacuaciones, 'Evacuación');
@@ -105,6 +105,7 @@ ${turno === 'Nocturno' && d.sueno.length ? `Sueño: ${d.sueno.join(', ')}` : ''}
 Observaciones especiales: ${d.observacionesEspeciales.join(', ') || 'Sin novedades'}
 ${micc ? `Micciones (${d.micciones.length}): ${micc}` : 'Micciones: Sin registrar'}
 ${evac ? `Evacuaciones (${d.evacuaciones.length}): ${evac}` : 'Evacuaciones: Sin registrar'}
+(Menciona cuántas micciones y evacuaciones hubo y cómo fueron, sin mencionar horas.)
 Signos vitales al recibir: ${tomaTexto(signos.recibir)}
 Signos vitales al entregar: ${tomaTexto(signos.entregar)}
 NOTAS ADICIONALES (integra esto en el reporte): ${d.notasAdicionales}
@@ -177,7 +178,7 @@ router.get('/controles', requierePermiso('reportes', 'ver'), (req, res) => {
 });
 
 // POST /api/gestion/reportes/generar
-router.post('/generar', requierePermiso('reportes', 'editar'), async (req, res) => {
+router.post('/generar', requierePermiso('reportes', 'crear'), async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY no está configurada en el servidor.' });
 
@@ -260,7 +261,7 @@ router.put('/:id', requierePermiso('reportes', 'editar'), (req, res) => {
 });
 
 // DELETE /api/gestion/reportes/:id
-router.delete('/:id', requierePermiso('reportes', 'editar'), (req, res) => {
+router.delete('/:id', requierePermiso('reportes', 'eliminar'), (req, res) => {
   try {
     const r = db.prepare('DELETE FROM reportes WHERE id = ?').run([Number(req.params.id)]);
     if (!r.changes) return res.status(404).json({ error: 'Reporte no encontrado.' });

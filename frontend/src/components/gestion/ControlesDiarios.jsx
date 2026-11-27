@@ -28,7 +28,7 @@ function limpiar(v, decimal) {
   return s.slice(0, 5)
 }
 
-export default function ControlesDiarios({ puedeEditar }) {
+export default function ControlesDiarios({ puedeEditar, puedeEliminar = true }) {
   const inicial = turnoActual()
   const [fecha, setFecha] = useState(inicial.fecha)
   const [turno, setTurno] = useState(inicial.turno)
@@ -162,7 +162,7 @@ export default function ControlesDiarios({ puedeEditar }) {
       </div>
 
       {vista === 'eliminacion' ? (
-        <TablaEliminacion residentes={delTurno} eventos={eventos} fecha={fecha} turno={turno} puedeEditar={puedeEditar}
+        <TablaEliminacion residentes={delTurno} eventos={eventos} fecha={fecha} turno={turno} puedeEditar={puedeEditar} puedeEliminar={puedeEliminar}
           cargando={cargando} error={error} onReintentar={cargar} onHistorial={setHistorial}
           onCambio={(ev, borrado) => setEventos(l => aplicarCambio(l, ev, borrado))} />
       ) : (<>
@@ -287,7 +287,7 @@ export default function ControlesDiarios({ puedeEditar }) {
 }
 
 // ── Micciones y evacuaciones del turno ────────────────────────────────────────
-function TablaEliminacion({ residentes, eventos, fecha, turno, puedeEditar, cargando, error, onReintentar, onHistorial, onCambio }) {
+function TablaEliminacion({ residentes, eventos, fecha, turno, puedeEditar, puedeEliminar, cargando, error, onReintentar, onHistorial, onCambio }) {
   const [busqueda, setBusqueda] = useState('')
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
@@ -369,7 +369,7 @@ function TablaEliminacion({ residentes, eventos, fecha, turno, puedeEditar, carg
                       {ELIMINACION.map(t => (
                         <td key={t.id} className="el-celda">
                           <RegistrosTipo tipo={t.id} residente={r} fecha={fecha} turno={turno} eventos={deTipo(r.id, t.id)}
-                            puedeEditar={puedeEditar} onCambio={onCambio} />
+                            puedeEditar={puedeEditar} puedeEliminar={puedeEliminar} onCambio={onCambio} />
                         </td>
                       ))}
                     </tr>

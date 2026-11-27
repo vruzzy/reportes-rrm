@@ -1,0 +1,31 @@
+/* Campanita de avisos (prefijo av-) */
+.av-campana { position: relative; }
+.av-num {
+  position: absolute; top: 1px; right: 0; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px;
+  background: var(--rose); color: #fff; font-size: 11px; font-weight: 700; line-height: 17px; text-align: center;
+}
+.av-permiso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--subtle); font-size: 14.5px; }
+.av-permiso > svg { width: 18px; height: 18px; color: var(--rose-600); flex: none; }
+.av-permiso > span { flex: 1; min-width: 200px; }
+.av-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.av-item {
+  width: 100%; display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border: 1px solid transparent; border-radius: var(--r);
+  background: none; color: var(--ink-2); font: inherit; text-align: left; cursor: pointer;
+}
+.av-item:hover { background: var(--subtle); }
+.av-item.nuevo { background: var(--rose-50); border-color: var(--line); color: var(--ink); }
+.av-ico { flex: none; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--subtle); color: var(--ink-3); }
+.av-ico svg { width: 17px; height: 17px; }
+.av-ico.retardo { color: #f0a43a; }
+.av-ico.sin_marcar { color: var(--rose-600); }
+.av-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.av-txt strong { font-size: 15.5px; font-weight: 600; }
+.av-txt span { font-size: 14px; color: var(--ink-3); }
+.av-item em { font-style: normal; font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+
+/* Dónde va la campanita */
+@media (min-width: 861px) {
+  .gl-root.colapsado .gl-user { flex-direction: column; gap: 8px; }
+  .gl-root.colapsado .gl-user .av-campana { display: inline-flex; order: -1; }
+}
+.gl-campana-movil { margin-left: auto; color: var(--ink-2); }

@@ -1,0 +1,117 @@
+/* Rol del día (prefijo rd-) y "Mi rol" en Mis actividades */
+.rd-root { display: flex; flex-direction: column; }
+.rd-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; }
+.rd-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
+.rd-acciones .rl-btn svg, .rd-inicio-btns .rl-btn svg { width: 16px; height: 16px; }
+.rd-estado { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; color: var(--ink-3); margin-right: 6px; }
+.rd-estado svg { width: 15px; height: 15px; }
+.rd-estado.ok { color: var(--green); }
+.rd-estado.error { color: var(--rose-600); }
+.rd-aviso { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; margin-bottom: 14px; border-radius: var(--r); background: var(--green-50); color: var(--green); font-size: 15px; }
+.rd-aviso > svg { width: 17px; height: 17px; flex-shrink: 0; }
+.rd-aviso .rl-icon-btn { margin-left: auto; }
+.rd-inicio { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 44px 20px; color: var(--ink-3); }
+.rd-inicio > svg { width: 34px; height: 34px; color: var(--rose-600); margin-bottom: 6px; }
+.rd-inicio strong { color: var(--ink); font-size: 18px; }
+.rd-inicio-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
+
+.rd-falta { padding: 14px 18px; transition: border-color .15s; }
+.rd-falta-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 6px; }
+.rd-falta-head .ac-h2 { margin: 0; }
+.rd-falta-head .rl-link { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 14.5px; }
+.rd-falta-head .rl-link svg { width: 14px; height: 14px; }
+.rd-todo { display: flex; align-items: center; gap: 6px; margin: 4px 0 0; color: var(--green); font-size: 15px; }
+.rd-todo svg { width: 16px; height: 16px; }
+.rd-fila-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.rd-etq { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); min-width: 92px; }
+
+.rd-chip {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 4px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 15px; cursor: pointer;
+}
+.rd-chip:hover { border-color: var(--line-h); }
+.rd-chip[draggable="true"] { cursor: grab; }
+.rd-chip.tarea { border-radius: var(--r); border-style: dashed; color: var(--ink-2); }
+.rd-chip.agregar { border-style: dashed; color: var(--rose-600); font-weight: 500; }
+.rd-chip.agregar svg { width: 15px; height: 15px; }
+.rd-chip.puesto { padding: 0 4px 0 0; gap: 0; font-weight: 500; }
+.rd-chip.resaltado { background: var(--orange-50); border-color: var(--orange); color: var(--orange); }
+.rd-chip-txt { background: none; border: none; font: inherit; color: inherit; padding: 4px 6px 4px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.rd-chip-x { flex-shrink: 0; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--ink-3); cursor: pointer; border-radius: 6px; }
+.rd-chip-x:hover { background: var(--subtle); color: var(--ink); }
+.rd-chip-x svg { width: 14px; height: 14px; }
+.rd-bano { width: 14px; height: 14px; color: #4a90c8; flex-shrink: 0; }
+
+.rd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; align-items: start; }
+.rd-col { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 12px; min-width: 0; transition: border-color .15s, background .15s; }
+.rd-sobre { border-color: var(--rose-600) !important; background: var(--rose-50) !important; }
+.rd-col-nueva { align-items: center; justify-content: center; min-height: 160px; border-style: dashed; color: var(--rose-600); font: inherit; font-size: 16px; font-weight: 500; cursor: pointer; flex-direction: row; gap: 8px; }
+.rd-col-nueva:hover { border-color: var(--rose-600); }
+.rd-col-nueva svg { width: 20px; height: 20px; }
+.rd-col-head { display: flex; align-items: flex-start; gap: 6px; }
+.rd-col-nombre { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rd-col-nombre strong { font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; overflow-wrap: anywhere; }
+.rd-col-nombre span { font-size: 13.5px; color: var(--ink-3); }
+.rd-col-btns { display: flex; margin: -4px -6px 0 0; }
+.rd-col-btns .rl-icon-btn { width: 30px; height: 30px; }
+.rd-col-btns .rl-icon-btn svg { width: 16px; height: 16px; }
+
+.rd-horarios { display: flex; flex-wrap: wrap; gap: 5px; }
+.rd-hora { min-height: 32px; padding: 3px 11px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg); color: var(--ink-2); font: inherit; font-size: 14.5px; font-weight: 500; cursor: pointer; }
+.rd-hora:hover { border-color: var(--line-h); }
+.rd-hora.activo { background: var(--rose-600); border-color: var(--rose-600); color: #fff; }
+.rd-hora.otro { border-style: dashed; color: var(--ink-3); }
+.rd-hora-input { width: 110px; height: 32px; font-size: 14.5px; }
+
+.rd-sec { display: flex; flex-direction: column; gap: 7px; padding-top: 10px; border-top: 1px solid var(--line-2); position: relative; }
+.rd-sec-tit { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
+.rd-sec-tit em { font-style: normal; font-weight: 500; text-transform: none; letter-spacing: 0; margin-left: 4px; }
+.rd-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.rd-tareas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.rd-tareas li { display: flex; align-items: center; gap: 4px; padding: 2px 0; border-radius: 6px; cursor: grab; }
+.rd-tareas li:hover { background: var(--subtle); }
+.rd-t-check { flex-shrink: 0; width: 18px; height: 18px; margin-left: 4px; border-radius: 5px; border: 1.5px solid var(--line-h); display: inline-flex; align-items: center; justify-content: center; color: #fff; }
+.rd-tareas li.hecha .rd-t-check { background: #2f8f5b; border-color: #2f8f5b; }
+.rd-t-check svg { width: 13px; height: 13px; }
+.rd-t-txt { flex: 1; min-width: 0; text-align: left; background: none; border: none; font: inherit; font-size: 15.5px; color: var(--ink); padding: 5px 4px; cursor: pointer; overflow-wrap: anywhere; }
+.rd-tareas li.resaltada .rd-t-txt { color: var(--rose-600); font-weight: 600; }
+.rd-tareas li.hecha .rd-t-txt { color: var(--ink-3); text-decoration: line-through; }
+.rd-nueva { position: relative; }
+.rd-nueva textarea { width: 100%; resize: none; font: inherit; font-size: 15px; min-height: 40px; padding: 8px 10px; line-height: 1.4; }
+.rd-sugeridas { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 2px); background: var(--surface); border: 1px solid var(--line-h); border-radius: var(--r); box-shadow: 0 8px 24px rgba(0,0,0,.35); display: flex; flex-direction: column; padding: 4px; }
+.rd-sugeridas button, .rd-elegir-lista button, .rd-menu button { text-align: left; background: none; border: none; font: inherit; font-size: 15px; color: var(--ink); padding: 8px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.rd-sugeridas button:hover, .rd-elegir-lista button:hover, .rd-menu button:hover:not(:disabled) { background: var(--subtle); }
+
+.rd-elegir { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--line-h); border-radius: var(--r); background: var(--bg); }
+.rd-elegir .ac-buscar { max-width: none; height: 38px; }
+.rd-elegir .rl-link { align-self: flex-end; }
+.rd-elegir-lista { display: flex; flex-direction: column; max-height: 240px; overflow-y: auto; }
+.rd-elegir-lista.grande { max-height: 320px; margin-bottom: 10px; }
+.rd-elegir-lista em, .rd-menu em { font-style: normal; font-size: 13px; color: var(--ink-3); margin-left: auto; padding-left: 8px; text-align: right; }
+.rd-buscar-dlg { max-width: none; margin-bottom: 8px; }
+.rd-otro { display: flex; gap: 8px; }
+.rd-otro .md-input { flex: 1; }
+
+.rd-menu { position: fixed; z-index: 60; width: 240px; max-height: 60vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--line-h); border-radius: var(--r); box-shadow: 0 10px 30px rgba(0,0,0,.4); padding: 4px; display: flex; flex-direction: column; }
+.rd-menu-tit { font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); padding: 6px 10px 4px; }
+.rd-menu button:disabled { color: var(--ink-3); cursor: default; }
+.rd-menu button.quitar { color: var(--rose-600); border-top: 1px solid var(--line-2); border-radius: 0 0 6px 6px; margin-top: 2px; }
+.rd-menu button svg { width: 15px; height: 15px; }
+.rd-copiar-ops { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+
+/* Mi rol (en Mis actividades) */
+.ac-mirol { display: flex; flex-direction: column; gap: 10px; }
+.ac-mirol-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ac-mirol-head .ac-h2 { margin: 0; }
+.ac-horario { display: inline-flex; align-items: center; gap: 5px; padding: 3px 12px; border-radius: var(--r); background: var(--rose-600); color: #fff; font-weight: 600; font-size: 15px; }
+.ac-horario svg { width: 15px; height: 15px; }
+.ac-mirol .rd-chip { cursor: default; }
+.ac-act.resaltada .ac-act-main strong { color: var(--rose-600); font-weight: 600; }
+.ac-act.hecha.resaltada .ac-act-main strong { color: var(--ink-3); }
+
+@media (max-width: 640px) {
+  .rd-etq { min-width: 0; width: 100%; }
+  .rd-acciones { width: 100%; }
+  .rd-acciones .rl-btn { flex: 1; justify-content: center; }
+}
